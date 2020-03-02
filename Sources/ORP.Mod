@@ -1047,22 +1047,24 @@ MODULE ORP; (*N. Wirth 1.7.97 / 9.2.2020  Oberon compiler for RISC in Oberon-07 
     END
   END ProcedureDecl;
 
-  PROCEDURE Import;
+  PROCEDURE ImportList;
     VAR impid, impid1: ORS.Ident;
   BEGIN
-    IF sym = ORS.ident THEN
-      ORS.CopyId(impid); ORS.Get(sym);
-      IF sym = ORS.becomes THEN
-        ORS.Get(sym);
-        IF sym = ORS.ident THEN ORS.CopyId(impid1); ORS.Get(sym)
-        ELSE ORS.Mark("id expected"); impid1 := impid
-        END
-      ELSE impid1 := impid
-      END ;
-      ORB.Import(impid, impid1)
-    ELSE ORS.Mark("id expected")
-    END
-  END Import;
+    REPEAT ORS.Get(sym);
+      IF sym = ORS.ident THEN
+        ORS.CopyId(impid); ORS.Get(sym);
+        IF sym = ORS.becomes THEN
+          ORS.Get(sym);
+          IF sym = ORS.ident THEN ORS.CopyId(impid1); ORS.Get(sym)
+          ELSE ORS.Mark("id expected"); impid1 := impid
+          END
+        ELSE impid1 := impid
+        END ;
+        ORB.Import(impid, impid1)
+      ELSE ORS.Mark("id expected")
+      END
+    UNTIL sym # ORS.comma
+  END ImportList;
 
   PROCEDURE Module;
     VAR key: LONGINT;
@@ -1077,10 +1079,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 9.2.2020  Oberon compiler for RISC in Oberon-07 
       ELSE ORS.Mark("identifier expected")
       END ;
       Check(ORS.semicolon, "no ;"); level := 0; exno := 1; key := 0;
-      IF sym = ORS.import THEN
-        REPEAT ORS.Get(sym); Import UNTIL sym # ORS.comma;
-        Check(ORS.semicolon, "; missing")
-      END ;
+      IF sym = ORS.import THEN ImportList; Check(ORS.semicolon, "; missing") END ;
       ORG.Open(version); Declarations(dc); ORG.SetDataSize((dc + 3) DIV 4 * 4);
       WHILE sym = ORS.procedure DO ProcedureDecl; Check(ORS.semicolon, "no ;") END ;
       ORG.Header;
