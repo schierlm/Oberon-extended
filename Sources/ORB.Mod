@@ -186,7 +186,7 @@ MODULE ORB;   (*NW 25.6.2014  / 1.3.2019  in Oberon-07 / AP 20.2.20 Extended Obe
   PROCEDURE ThisModule(name, orgname: ORS.Ident; non: BOOLEAN; key: LONGINT): Object;
     VAR mod: Module; obj, obj1: Object;
   BEGIN obj1 := topScope; obj := obj1.next;  (*search for module*)
-    WHILE (obj # NIL) & (obj(Module).orgname # orgname) DO obj1 := obj; obj := obj1.next END;
+    WHILE (obj # NIL) & (obj(Module).orgname # orgname) DO obj1 := obj; obj := obj1.next END ;
     IF obj = NIL THEN  (*new module, search for alias*)
       obj := topScope.next;
       WHILE (obj # NIL) & (obj.name # name) DO obj := obj.next END ;
@@ -200,7 +200,7 @@ MODULE ORB;   (*NW 25.6.2014  / 1.3.2019  in Oberon-07 / AP 20.2.20 Extended Obe
         IF obj.type.form = NoTyp THEN ORS.Mark("mult def") ELSE ORS.Mark("invalid import order") END
       ELSE ORS.Mark("re-import impossible")  (*conflict with alias*)
       END
-    ELSIF non THEN (*module already present and explicit import*)
+    ELSIF non THEN  (*module already present and explicit import*)
       IF obj.type.form = NoTyp THEN ORS.Mark("mult def") ELSE ORS.Mark("invalid import order") END
     END ;
     RETURN obj
@@ -297,7 +297,7 @@ MODULE ORB;   (*NW 25.6.2014  / 1.3.2019  in Oberon-07 / AP 20.2.20 Extended Obe
           ELSIF class = Var THEN Files.ReadNum(R, obj.val); obj.rdo := TRUE
           END ;
           obj.next := thismod.dsc; thismod.dsc := obj; Read(R, class)
-        END ;
+        END
       ELSE ORS.Mark("import not available")
       END
     END
