@@ -1,4 +1,4 @@
-MODULE ORP; (*N. Wirth 1.7.97 / 9.2.2020  Oberon compiler for RISC in Oberon-07 / AP 26.2.20 Extended Oberon*)
+MODULE ORP; (*N. Wirth 1.7.97 / 9.2.2020  Oberon compiler for RISC in Oberon-07 / AP 6.3.20 Extended Oberon*)
   IMPORT Texts, Oberon, ORS, ORB, ORG;
   (*Author: Niklaus Wirth, 2014. Oberon-2 extensions by Andreas Pirklbauer, 2020.
     Parser of Oberon-RISC compiler. Uses Scanner ORS to obtain symbols (tokens),
@@ -1146,7 +1146,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 9.2.2020  Oberon compiler for RISC in Oberon-07 
     Oberon.Collect(0)
   END Compile;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR Compiler  13.2.2020 / AP 26.2.20");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR Compiler  13.2.2020 / AP 6.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf);
   NEW(dummy); dummy.class := ORB.Var; dummy.type := ORB.intType;
   expression := expression0; Type := Type0; FormalType := FormalType0

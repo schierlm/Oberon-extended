@@ -13,7 +13,7 @@ Current features of the Extended Oberon System
 * Improved decoder tools
 * Import any number of modules
 
-**REVISION:** 26.2.2020
+**REVISION:** 6.3.2020
 
 **DOCUMENTATION**
 
