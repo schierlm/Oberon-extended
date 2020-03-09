@@ -1,11 +1,11 @@
-MODULE Oberon; (*JG 6.9.90 / 23.9.93 / 13.8.94 / NW 14.4.2013 / 22.12.2015 / AP 13.2.20 Extended Oberon*)
+MODULE Oberon; (*JG 6.9.90 / 23.9.93 / 13.8.94 / NW 14.4.2013 / 22.12.2015 / AP 9.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, Files, Modules, Input, Display, Viewers, Fonts, Texts;
 
   CONST (*message ids*)
     consume* = 0; track* = 1; defocus* = 0; neutralize* = 1; mark* = 2;
     off = 0; idle = 1; active = 2;   (*task states*)
     BasicCycle = 20;
-    ESC = 1BX; SETSTAR = 1AX; TAB = 9X; CR = 0DX;
+    TAB = Input.TAB; CR = Input.CR; ESC = Input.ESC; SETSTAR = 1AX;
 
   TYPE Painter* = PROCEDURE (x, y: INTEGER);
     Marker* = RECORD Fade*, Draw*: Painter END;

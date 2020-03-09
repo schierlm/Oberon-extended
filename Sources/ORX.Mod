@@ -1,6 +1,6 @@
-MODULE ORX;  (*Oberon boot converter for RISC / AP 7.2.20 Extended Oberon*)
-  IMPORT Files, Modules, Texts, Oberon;
-  CONST CR = 0DX;
+MODULE ORX;  (*Oberon boot converter for RISC / AP 9.3.20 Extended Oberon*)
+  IMPORT Files, Modules, Input, Texts, Oberon;
+  CONST CR = Input.CR;
   TYPE Writer = PROCEDURE(VAR R: Files.Rider; x: LONGINT);
 
   VAR W: Texts.Writer;
@@ -144,6 +144,6 @@ MODULE ORX;  (*Oberon boot converter for RISC / AP 7.2.20 Extended Oberon*)
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END WriteStream;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR boot converter  AP 7.2.20");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR boot converter  AP 9.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
 END ORX.

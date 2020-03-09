@@ -1,5 +1,6 @@
-MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 26.2.20 Extended Oberon*)
-  IMPORT SYSTEM, Files, Modules, Texts, Oberon, ORB;
+MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 9.3.20 Extended Oberon*)
+  IMPORT SYSTEM, Files, Modules, Input, Texts, Oberon, ORB;
+  CONST TAB = Input.TAB;
   VAR W: Texts.Writer;
     mnemo0, mnemo1: ARRAY 16, 4 OF CHAR;  (*mnemonics*)
 
@@ -179,7 +180,7 @@ MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 26.2.20 Extended Oberon*)
         Files.ReadInt(R, size); Texts.WriteInt(W, size, 6); Texts.WriteLn(W);
         Texts.WriteString(W, "imports:"); Texts.WriteLn(W); Files.ReadString(R, name);
         WHILE name[0] # 0X DO
-          Texts.Write(W, 9X); Texts.WriteString(W, name);
+          Texts.Write(W, TAB); Texts.WriteString(W, name);
           Files.ReadInt(R, key); Texts.WriteHex(W, key); Texts.WriteLn(W);
           Files.ReadString(R, name)
         END ;
@@ -222,8 +223,8 @@ MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 26.2.20 Extended Oberon*)
         Texts.WriteString(W, "code"); Texts.WriteLn(W);
         Files.ReadInt(R, n); i := 0; DEC(nofP); DEC(nofD);
         WHILE i < n DO
-          Files.ReadInt(R, data); Texts.WriteInt(W, i, 4); Texts.Write(W, 9X); Texts.WriteHex(W, data);
-          Texts.Write(W, 9X);
+          Files.ReadInt(R, data); Texts.WriteInt(W, i, 4); Texts.Write(W, TAB); Texts.WriteHex(W, data);
+          Texts.Write(W, TAB);
           IF (nofP >= 0) & (i = fixP[nofP]) THEN opcode(data, TRUE, FALSE); DEC(nofP)
           ELSIF (nofD >= 0) & (i = fixD[nofD]) THEN opcode(data, FALSE, TRUE); DEC(nofD)
           ELSE opcode(data, FALSE, FALSE)
@@ -233,7 +234,7 @@ MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 26.2.20 Extended Oberon*)
         Texts.WriteString(W, "commands:"); Texts.WriteLn(W);
         Files.ReadString(R, name);
         WHILE name[0] # 0X DO
-          Texts.Write(W, 9X); Texts.WriteString(W, name);
+          Texts.Write(W, TAB); Texts.WriteString(W, name);
           Files.ReadInt(R, adr); Texts.WriteInt(W, adr, 5); Texts.WriteLn(W);
           Files.ReadString(R, name)
         END ;
@@ -273,8 +274,8 @@ MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 26.2.20 Extended Oberon*)
          Texts.WriteLn(W); adr := mod.code;
          Texts.WriteString(W, "code"); Texts.WriteInt(W, (mod.imp - adr) DIV 4, 6); Texts.WriteLn(W);
          WHILE adr # mod.imp DO
-           SYSTEM.GET(adr, data); Texts.WriteInt(W, adr, 4); Texts.Write(W, 9X); Texts.WriteHex(W, data);
-           Texts.Write(W, 9X); opcode(data, FALSE, FALSE); Texts.WriteLn(W); INC(adr, 4)
+           SYSTEM.GET(adr, data); Texts.WriteInt(W, adr, 4); Texts.Write(W, TAB); Texts.WriteHex(W, data);
+           Texts.Write(W, TAB); opcode(data, FALSE, FALSE); Texts.WriteLn(W); INC(adr, 4)
          END ;
        ELSE Texts.WriteString(W, " not loaded"); Texts.WriteLn(W)
        END ;
@@ -282,7 +283,7 @@ MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 26.2.20 Extended Oberon*)
      END
   END DecMod;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "ORTool 18.2.2013 / AP 26.2.20");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "ORTool 18.2.2013 / AP 9.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf);
   mnemo0[0] := "MOV";
   mnemo0[1] := "LSL";

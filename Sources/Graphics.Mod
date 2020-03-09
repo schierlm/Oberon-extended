@@ -1,7 +1,8 @@
-MODULE Graphics;   (*NW 21.12.89 / 18.11.201 / 8.4.2016 / AP 7.2.20*)
-  IMPORT SYSTEM, Files, Modules, Fonts, (*Printer,*) Texts, Oberon;
+MODULE Graphics;   (*NW 21.12.89 / 18.11.201 / 8.4.2016 / AP 9.3.20*)
+  IMPORT SYSTEM, Files, Modules, Input, Fonts, (*Printer,*) Texts, Oberon;
 
   CONST NameLen* = 32; GraphFileId = 0FAX; LibFileId = 0FBX;
+    TAB = Input.TAB; CR = Input.CR;
 
   TYPE
     Graph* = POINTER TO GraphDesc;
@@ -137,7 +138,7 @@ MODULE Graphics;   (*NW 21.12.89 / 18.11.201 / 8.4.2016 / AP 7.2.20*)
     VAR obj: Object; tag: INTEGER;
   BEGIN obj := G.first;
     WHILE obj # NIL DO
-      Texts.Write(XW, 9X); Texts.WriteHex(XW, ORD(obj)); Texts.Write(XW, 9X);
+      Texts.Write(XW, TAB); Texts.WriteHex(XW, ORD(obj)); Texts.Write(XW, TAB);
       Texts.WriteInt(XW, obj.x, 5); Texts.WriteInt(XW, obj.y, 5); Texts.WriteInt(XW, obj.w, 5); Texts.WriteInt(XW, obj.h, 5);
       Texts.Write(XW, "/"); SYSTEM.GET(ORD(obj)-8, tag); Texts.WriteHex(XW, tag);
       SYSTEM.GET(ORD(obj)-4, tag); Texts.WriteHex(XW, tag); Texts.WriteLn(XW); obj := obj.next
@@ -550,9 +551,9 @@ MODULE Graphics;   (*NW 21.12.89 / 18.11.201 / 8.4.2016 / AP 7.2.20*)
   BEGIN
     dst.x := src.x; dst.y := src.y; dst.w := src.w; dst.h := src.h; dst.col := src.col;
     dst(Caption).pos := T.len + 1; dst(Caption).len := src(Caption).len;
-    Texts.Write(TW, 0DX); Texts.OpenReader(R, T, src(Caption).pos);
+    Texts.Write(TW, CR); Texts.OpenReader(R, T, src(Caption).pos);
     Texts.Read(R, ch); TW.fnt := R.fnt;
-    WHILE ch > 0DX DO Texts.Write(TW, ch); Texts.Read(R, ch) END ;
+    WHILE ch > CR DO Texts.Write(TW, ch); Texts.Read(R, ch) END ;
     Texts.Append(T, TW.buf)
   END CopyCaption;
 
@@ -565,7 +566,7 @@ MODULE Graphics;   (*NW 21.12.89 / 18.11.201 / 8.4.2016 / AP 7.2.20*)
     CASE M OF
     FontMsg: fnt := M(FontMsg).fnt; w := 0; len := 0; pos := obj(Caption).pos;
       Texts.OpenReader(R, T, pos); Texts.Read(R, ch); dy := R.fnt.minY;
-      WHILE ch > 0DX DO
+      WHILE ch > CR DO
         Fonts.GetPat(fnt, ch, dx, x1, y1, w1, h1, patadr);
         INC(w, dx); INC(len); Texts.Read(R, ch)
       END ;
@@ -582,9 +583,9 @@ MODULE Graphics;   (*NW 21.12.89 / 18.11.201 / 8.4.2016 / AP 7.2.20*)
 
   PROCEDURE ReadCaption(obj: Object; VAR R: Files.Rider; VAR C: Context);
     VAR ch: CHAR; fno: BYTE; len: INTEGER;
-  BEGIN obj(Caption).pos := T.len + 1; Texts.Write(TW, 0DX);
+  BEGIN obj(Caption).pos := T.len + 1; Texts.Write(TW, CR);
     Files.ReadByte(R, fno); TW.fnt := C.font[fno]; len := 0; Files.Read(R, ch);
-    WHILE ch > 0DX DO Texts.Write(TW, ch); INC(len); Files.Read(R, ch) END ;
+    WHILE ch > CR DO Texts.Write(TW, ch); INC(len); Files.Read(R, ch) END ;
     obj(Caption).len := len; Texts.Append(T, TW.buf)
   END ReadCaption;
 
@@ -596,7 +597,7 @@ MODULE Graphics;   (*NW 21.12.89 / 18.11.201 / 8.4.2016 / AP 7.2.20*)
       Texts.OpenReader(TR, T, obj(Caption).pos); Texts.Read(TR, ch);
       fno := FontNo(W, C, TR.fnt);
       WriteObj(W, cno, obj); Files.WriteByte(W, fno);
-      WHILE ch > 0DX DO  Files.Write(W, ch); Texts.Read(TR, ch) END ;
+      WHILE ch > CR DO  Files.Write(W, ch); Texts.Read(TR, ch) END ;
       Files.Write(W, 0X)
     END
   END WriteCaption;

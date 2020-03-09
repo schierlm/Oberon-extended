@@ -1,7 +1,8 @@
-MODULE Tools;   (*NW 22.2.14 / AP 7.2.20*)
+MODULE Tools;   (*NW 22.2.14 / AP 9.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, Files, Modules, Input, Texts, Viewers, Oberon, MenuViewers, TextFrames;
 
   CONST StandardMenu = "Tools.Close System.Copy System.Grow Edit.Search Edit.Store | System.Expand System.Spread System.Clone";
+    BS = Input.BS; TAB = Input.TAB; LF = Input.LF; CR = Input.CR; DEL = Input.DEL;
 
   VAR T: Texts.Text; W: Texts.Writer; open: BOOLEAN;
 
@@ -39,7 +40,7 @@ MODULE Tools;   (*NW 22.2.14 / AP 7.2.20*)
     IF S.class = Texts.Int THEN
       adr := S.i DIV 20H * 20H; Texts.Scan(S);
       IF S.class = Texts.Int THEN n := S.i ELSE n := 8 END ;
-      REPEAT DEC(n); Texts.WriteLn(W); Texts.WriteHex(W, adr); Texts.Write(W, 9X); m := 8;
+      REPEAT DEC(n); Texts.WriteLn(W); Texts.WriteHex(W, adr); Texts.Write(W, TAB); m := 8;
         REPEAT SYSTEM.GET(adr, data); INC(adr, 4); Texts.WriteHex(W, data); DEC(m)
         UNTIL m = 0
       UNTIL n = 0;
@@ -57,7 +58,7 @@ MODULE Tools;   (*NW 22.2.14 / AP 7.2.20*)
       IF S.class = Texts.Int THEN n := S.i ELSE n := 8 END ;
       Kernel.GetSector(secno*29, buf); Texts.WriteString(W, "Sector "); Texts.WriteInt(W, S.i, 4);
       k := 0;
-      REPEAT DEC(n); m := 8; Texts.WriteLn(W); Texts.WriteHex(W, k*4); Texts.Write(W, 9X);
+      REPEAT DEC(n); m := 8; Texts.WriteLn(W); Texts.WriteHex(W, k*4); Texts.Write(W, TAB);
         REPEAT Texts.WriteHex(W, buf[k]); INC(k); DEC(m) UNTIL m = 0;
       UNTIL n = 0;
       Texts.WriteLn(W); Texts.Append(T, W.buf)
@@ -74,7 +75,7 @@ MODULE Tools;   (*NW 22.2.14 / AP 7.2.20*)
       IF F # NIL THEN
         n := 0; Files.Set(R, F, 0); Files.ReadInt(R, x);
         WHILE ~R.eof DO
-          IF n MOD 20H = 0 THEN Texts.WriteLn(W); Texts.WriteHex(W, n); Texts.Write(W, 9X) END ;
+          IF n MOD 20H = 0 THEN Texts.WriteLn(W); Texts.WriteHex(W, n); Texts.Write(W, TAB) END ;
           Texts.WriteHex(W, x); INC(n, 4); Files.ReadInt(R, x)
         END ;
         Texts.WriteHex(W, x)
@@ -96,8 +97,8 @@ MODULE Tools;   (*NW 22.2.14 / AP 7.2.20*)
       Texts.WriteString(W, "converting to "); Texts.WriteString(W, S.s);
       F := Files.New(S.s); Files.Set(Q, F, 0); Texts.OpenReader(R, T, beg); Texts.Read(R, ch);
       WHILE ~R.eot DO
-        IF ch = 0DX THEN Files.Write(Q, 0DX); Files.Write(Q, 0AX)
-        ELSIF ch = 9X THEN  (*TAB*) Files.Write(Q, " "); Files.Write(Q, " ")
+        IF ch = CR THEN Files.Write(Q, CR); Files.Write(Q, LF)
+        ELSIF ch = TAB THEN Files.Write(Q, " "); Files.Write(Q, " ")
         ELSE Files.Write(Q, ch)
         END ;
         Texts.Read(R, ch)

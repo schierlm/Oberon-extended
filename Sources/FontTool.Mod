@@ -1,6 +1,6 @@
-MODULE FontTool; (*JG 18.11.90; PDR 8.6.12; NW 22.2.2020*)
-  IMPORT SYSTEM, Files, Texts, Oberon;
-  CONST FontFileId = 0DBX;
+MODULE FontTool; (*JG 18.11.90; PDR 8.6.12; NW 22.2.2020 / AP 9.3.20 Extended Oberon*)
+  IMPORT SYSTEM, Files, Input, Texts, Oberon;
+  CONST FontFileId = 0DBX; TAB = Input.TAB;
   VAR W: Texts.Writer;
 
 PROCEDURE Show*;
@@ -95,7 +95,7 @@ BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
             Texts.WriteInt(W, LSL(ASR(ORD(raster[j+2]), 24), 24), 4);
             Texts.WriteInt(W, ORD(raster[j+3]), 4); Texts.WriteInt(W, ORD(raster[j+4]), 4);
             n := (ORD(raster[j+3]) + 7) DIV 8 * ORD(raster[j+4]); INC(j, 5);  (*pattern len*)
-            Texts.Write(W, 9X);   (*tab*)
+            Texts.Write(W, TAB);
             WHILE n > 0 DO DEC(n); WriteHex(ORD(raster[j])); INC(j) END ;
             Texts.WriteLn(W)
           END

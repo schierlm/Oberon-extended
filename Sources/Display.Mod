@@ -1,4 +1,4 @@
-MODULE Display;  (*NW 5.11.2013 / 17.1.2019 / AP 12.2.20 Extended Oberon*)
+MODULE Display;  (*NW 5.11.2013 / 17.1.2019 / AP 9.3.20 Extended Oberon*)
   IMPORT SYSTEM;
 
   CONST black* = 0; white* = 1;  (*black = background*)

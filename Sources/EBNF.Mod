@@ -1,7 +1,7 @@
-MODULE EBNF;  (*NW 3.9.97 / 12.9.97 / 1.3.2014*)
-  IMPORT Texts, Oberon;
+MODULE EBNF;  (*NW 3.9.97 / 12.9.97 / 1.3.2014 / AP 9.3.20 Extended Oberon*)
+  IMPORT Input, Texts, Oberon;
 
-  CONST IdLen = 16;
+  CONST TAB = Input.TAB; IdLen = 16;
     ident = 0; literal = 2; lparen = 3; lbrak = 4; lbrace = 5; bar = 6; eql = 7;
     rparen = 8; rbrak = 9; rbrace = 10; period = 11; other = 12;
 
@@ -166,12 +166,12 @@ MODULE EBNF;  (*NW 3.9.97 / 12.9.97 / 1.3.2014*)
     VAR s: Symbol;
   BEGIN Texts.WriteString(W, "Nonterminals:"); Texts.WriteLn(W); s := root;
     WHILE s # NIL DO
-      IF s.tag = 1 THEN Texts.Write(W, 9X); Texts.WriteString(W, s.id); Texts.WriteLn(W) END ;
+      IF s.tag = 1 THEN Texts.Write(W, TAB); Texts.WriteString(W, s.id); Texts.WriteLn(W) END ;
       s := s.next
     END ;
     Texts.WriteString(W, "Terminals:"); Texts.WriteLn(W); s := root;
     WHILE s # NIL DO
-      IF s.tag = 0 THEN Texts.Write(W, 9X); Texts.WriteString(W, s.id); Texts.WriteLn(W) END ;
+      IF s.tag = 0 THEN Texts.Write(W, TAB); Texts.WriteString(W, s.id); Texts.WriteLn(W) END ;
       s := s.next
     END ;
     Texts.Append(Oberon.Log, W.buf)
@@ -210,7 +210,7 @@ MODULE EBNF;  (*NW 3.9.97 / 12.9.97 / 1.3.2014*)
 
   PROCEDURE WriteSet(VAR id: ARRAY OF CHAR; s: SET);
     VAR x: Symbol;
-  BEGIN Texts.Write(W, 9X); Texts.WriteString(W, id); Texts.WriteString(W, " :: ");
+  BEGIN Texts.Write(W, TAB); Texts.WriteString(W, id); Texts.WriteString(W, " :: ");
     x := root;
     WHILE (s # {}) & (x # NIL) DO
       IF (x.tag = 0) & (x.no IN s) THEN Texts.Write(W, " "); Texts.WriteString(W, x.id); EXCL(s, x.no) END ;

@@ -1,13 +1,12 @@
-MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 6.3.20 Extended Oberon*)
+MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 9.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, FileDir, Files, Modules,
     Input, Display, Viewers, Fonts, Texts, Oberon, MenuViewers, TextFrames;
 
-  CONST Version* = "Extended Oberon System  AP 6.3.20";
+  CONST Version* = "Extended Oberon System  AP 9.3.20";
     StandardMenu = "System.Close System.Copy System.Grow Edit.Search Edit.Store | System.Expand System.Spread System.Clone";
     LogMenu = "Edit.Locate Edit.Search System.Copy System.Grow System.Clear | System.Expand System.Spread System.Clone";
-    SystemLog = "System.Log";
-    SystemTool = "System.Tool";
-    TAB = 9X; CR = 0DX; LNK = 15; MTOrg = 20H; TaskPeriod = 500; (*ms*)
+    SystemLog = "System.Log"; SystemTool = "System.Tool";
+    TAB = Input.TAB; CR = Input.CR; LNK = 15; MTOrg = 20H; TaskPeriod = 500; (*ms*)
 
   TYPE Handler = PROCEDURE(name: ARRAY OF CHAR);
 

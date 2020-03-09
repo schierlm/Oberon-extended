@@ -1,5 +1,5 @@
-MODULE Texts; (*JG 21.11.90 / NW 11.7.90 / 24.12.95 / 22.11.10 / 18.11.2014 / 10.1.2019 / AP 7.2.20 Extended Oberon*)
-  IMPORT Files, Fonts;
+MODULE Texts; (*JG 21.11.90 / NW 11.7.90 / 24.12.95 / 22.11.10 / 18.11.2014 / 10.1.2019 / AP 9.3.20 Extended Oberon*)
+  IMPORT Files, Input, Fonts;
 
   CONST (*scanner symbol classes*)
     Inval* = 0;         (*invalid symbol*)
@@ -12,7 +12,7 @@ MODULE Texts; (*JG 21.11.90 / NW 11.7.90 / 24.12.95 / 22.11.10 / 18.11.2014 / 10
     (* TextBlock = TextTag offset run {run} "0" len {AsciiCode}.
       run = fnt [name] col voff len. *)
 
-    TAB = 9X; CR = 0DX;
+    TAB = Input.TAB; CR = Input.CR;
     TextTag = 0F1X;
     replace* = 0; insert* = 1; delete* = 2; unmark* = 3;  (*op-codes*)
 

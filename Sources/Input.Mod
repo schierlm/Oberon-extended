@@ -1,7 +1,11 @@
-MODULE Input; (*NW 5.10.86 / 15.11.90 Ceres-2; PDR 21.4.12 / NW 15.5.2013 Ceres-4*)
+MODULE Input; (*NW 5.10.86 / 15.11.90 Ceres-2; PDR 21.4.12 / NW 15.5.2013 Ceres-4 / AP 9.3.20 Extended Oberon*)
   IMPORT SYSTEM;
 
   CONST msAdr = -40; kbdAdr = -36;
+   (*ascii codes*) NUL* = 0X; BS* = 08X; TAB* = 09X; LF* = 0AX; CR* = 0DX; SUB* = 1AX; ESC* = 1BX; SPC* = 20X; DEL* = 7FX;
+   (*text control*) CtrlA* = 1X; CtrlC* = 03X; CtrlV* = 16X; CtrlX* = 18X;
+   (*cursor keys*) CursorLeft* = 11X; CursorRight* = 12X; CursorUp* = 13X; CursorDown* = 14X;
+
   VAR kbdCode: BYTE; (*last keyboard code read*)
     Recd, Up, Shift, Ctrl, Ext: BOOLEAN;
     KTabAdr: INTEGER;  (*keyboard code translation table*)

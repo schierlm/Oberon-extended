@@ -1,8 +1,10 @@
-MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 13.2.20 Extended Oberon*)
+MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
   IMPORT Input, Display, Viewers, Fonts, Texts, Oberon;
 
-  CONST replace* = 0; insert* = 1; delete* = 2; unmark* = 3;  (*message id*)
-    BS = 8X; TAB = 9X; CR = 0DX; DEL = 7FX;
+  CONST replace* = Texts.replace; insert* = Texts.insert; delete* = Texts.delete; unmark* = Texts.unmark;  (*message ids*)
+    BS = Input.BS; TAB = Input.TAB; CR = Input.CR; DEL = Input.DEL;
+    CtrlA = Input.CtrlA; CtrlC = Input.CtrlC; CtrlV = Input.CtrlV; CtrlX = Input.CtrlX;
+    CursorLeft = Input.CursorLeft; CursorRight = Input.CursorRight; CursorUp = Input.CursorUp; CursorDown = Input.CursorDown;
 
   TYPE Line = POINTER TO LineDesc;
     LineDesc = RECORD
@@ -831,31 +833,31 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 13.2.20 Extended Oberon*)
       IF F.carloc.pos > F.org THEN
         Texts.Delete(F.text, F.carloc.pos - 1, F.carloc.pos, DelBuf); SetCaret(F, F.carloc.pos - 1)
       END
-    ELSIF ch = 1X THEN  (*ctrl-a  select-all*)
+    ELSIF ch = CtrlA THEN  (*select all*)
       IF F.hasSel THEN FlipSelection(F, F.selbeg, F.selend) END;
       F.selbeg.org := 0; F.selbeg.pos := 0; F.selbeg.x := F.left;
       F.selend.org := F.text.len; F.selend.pos := F.text.len; F.selend.x := F.left;
       FlipSelection(F, F.selbeg, F.selend); F.time := Oberon.Time(); F.hasSel := TRUE
-    ELSIF ch = 3X THEN  (*ctrl-c  copy*)
+    ELSIF ch = CtrlC THEN  (*copy*)
       IF F.hasSel THEN
         NEW(TBuf); Texts.OpenBuf(TBuf); Texts.Save(F.text, F.selbeg.pos, F.selend.pos, TBuf)
       END
-    ELSIF ch = 16X THEN  (*ctrl-v  paste*)
+    ELSIF ch = CtrlV THEN  (*paste*)
       NEW(buf); Texts.OpenBuf(buf); Texts.Copy(TBuf, buf); Texts.Insert(F.text, F.carloc.pos, buf);
       SetCaret(F, F.carloc.pos + TBuf.len)
-    ELSIF ch = 18X THEN  (*ctrl-x  cut*)
+    ELSIF ch = CtrlX THEN  (*cut*)
       IF F.hasSel THEN
         NEW(TBuf); Texts.OpenBuf(TBuf); Texts.Delete(F.text, F.selbeg.pos, F.selend.pos, TBuf)
       END
-    (*ELSIF ch = 11X THEN  (*cursor left*)
+    ELSIF ch = CursorLeft THEN
       IF F.carloc.pos > 0 THEN RemoveCaret(F); SetCaret(F, F.carloc.pos - 1) END
-    ELSIF ch = 12X THEN  (*cursor right*)
+    ELSIF ch = CursorRight THEN
       IF F.carloc.pos < F.text.len THEN RemoveCaret(F); SetCaret(F, F.carloc.pos + 1) END
-    ELSIF ch = 13X THEN  (*cursor up*)
+    ELSIF ch = CursorUp THEN
       RemoveCaret(F); SetCaret(F, Pos(F, F.X + F.carloc.x, F.Y + F.carloc.y + F.lsp))
-    ELSIF ch = 14X THEN  (*cursor down*)
-      RemoveCaret(F); SetCaret(F, Pos(F, F.X + F.carloc.x, F.Y + F.carloc.y - F.lsp))*)
-    ELSIF (20X <= ch) & (ch <= DEL) OR (ch = CR) OR (ch = TAB) THEN
+    ELSIF ch = CursorDown THEN
+      RemoveCaret(F); SetCaret(F, Pos(F, F.X + F.carloc.x, F.Y + F.carloc.y - F.lsp))
+    ELSIF (" " <= ch) & (ch <= DEL) OR (ch = CR) OR (ch = TAB) THEN
       KW.fnt := fnt; KW.col := col; KW.voff := voff; Texts.Write(KW, ch);
       Texts.Insert(F.text, F.carloc.pos, KW.buf);
       SetCaret(F, F.carloc.pos + 1)

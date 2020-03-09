@@ -1,4 +1,4 @@
-MODULE GraphicFrames; (*NW 18.4.88 / 18.11.2013 / 27.8.2018 / AP 12.2.20 Extended Oberon*)
+MODULE GraphicFrames; (*NW 18.4.88 / 18.11.2013 / 27.8.2018 / AP 9.3.20 Extended Oberon*)
   IMPORT SYSTEM, Display, Viewers, Input, Fonts, Texts, Graphics, Oberon;
 
   CONST (*update message ids*)
@@ -6,6 +6,8 @@ MODULE GraphicFrames; (*NW 18.4.88 / 18.11.2013 / 27.8.2018 / AP 12.2.20 Extende
     drawnorm = 4; drawsel = 5; drawdel = 6;
 
     markW = 5;
+
+    CR = Input.CR;
 
   TYPE
     Frame* = POINTER TO FrameDesc;
@@ -213,7 +215,7 @@ MODULE GraphicFrames; (*NW 18.4.88 / 18.11.2013 / 27.8.2018 / AP 12.2.20 Extende
       cap: Graphics.Caption;
       pat: INTEGER;
       R: Texts.Reader;
-  BEGIN Texts.Write(W, 0DX);
+  BEGIN Texts.Write(W, CR);
     NEW(cap); cap.len := end - beg;
     cap.pos := Graphics.T.len + 1; cap.do := Graphics.CapMethod;
     Texts.OpenReader(R, T, beg); Texts.Read(R, ch); W.fnt := R.fnt; W.col := R.col; w := 0;
@@ -320,7 +322,7 @@ MODULE GraphicFrames; (*NW 18.4.88 / 18.11.2013 / 27.8.2018 / AP 12.2.20 Extende
   END Edit;
 
   PROCEDURE NewCaption(F: Frame; col: INTEGER; font: Fonts.Font);
-  BEGIN Texts.Write(W, 0DX);
+  BEGIN Texts.Write(W, CR);
     NEW(newcap); newcap.x := F.mark.x - F.x; newcap.y := F.mark.y - F.y + font.minY;
     newcap.w := 0; newcap.h := font.height; newcap.col := col;
     newcap.pos := Graphics.T.len + 1; newcap.len := 0; newcap.do := Graphics.CapMethod;

@@ -1,7 +1,7 @@
-MODULE Edit; (*JG 2.11.90 / NW 28.11.15 / AP 13.2.20 Extended Oberon*)
-  IMPORT Files, Fonts, Texts, Display, Viewers, Oberon, MenuViewers, TextFrames;
+MODULE Edit; (*JG 2.11.90 / NW 28.11.15 / AP 9.3.20 Extended Oberon*)
+  IMPORT Files, Fonts, Texts, Input, Display, Viewers, Oberon, MenuViewers, TextFrames;
 
-  CONST CR = 0DX; maxlen = 32;
+  CONST CR = Input.CR; maxlen = 32;
     StandardMenu = "System.Close System.Copy System.Grow Edit.Search Edit.Store | System.Expand System.Spread System.Clone";
 
   VAR W: Texts.Writer;
