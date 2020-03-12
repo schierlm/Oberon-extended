@@ -1,4 +1,4 @@
-MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code generator for RISC / AP 26.2.20 Extended Oberon*)
+MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code generator for RISC / AP 12.3.20 Extended Oberon*)
   IMPORT SYSTEM, Files, ORS, ORB;
   (*Code generator for Oberon compiler for RISC processor.
      Procedural interface to Parser ORP; result in array "code".
@@ -91,7 +91,7 @@ MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code 
 
   PROCEDURE Put2a(op, a, mno, disp: LONGINT);
   BEGIN (*emit load/store instruction to be fixed up by loader*)
-    code[pc] := ((op * 10H + a) * 100H + mno) * 10000H + (disp MOD 10000H); INC(pc)
+    code[pc] := ((op * 10H + a) * 40H + mno) * 40000H + (disp MOD 40000H); INC(pc)
   END Put2a;
 
   PROCEDURE Put3(op, cond, off: LONGINT);
@@ -395,7 +395,7 @@ MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code 
     WHILE t # NIL DO fld := t.dsc;
       IF t.base # NIL THEN bot := t.base.dsc ELSE bot := NIL END ;
       WHILE fld # bot DO
-        IF (fld.class = ORB.Const) & (fld.type.form = ORB.TProc) & (td[tdw-fld.lev-1] = -1) THEN
+        IF (fld.class = ORB.Const) & (td[tdw-fld.lev-1] = -1) THEN
           IF t.mno = 0 THEN k := fld.val DIV 4 (*mthadr*) ELSE k := fld.val (*exno*) END ;
           td[tdw-fld.lev-1] := (t.mno*4000H + k) * 400H
         END ;

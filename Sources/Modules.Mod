@@ -4,7 +4,7 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
     noerr* = 0; nofile* = 1; badversion* = 2; badkey* = 3; badfile* = 4; nospace* = 5; nocmd* = 6; badcmd* = 7; nomod* = 8;
     noref* = 0; clients* = 9; dyntypes* = 10; dynptrs* = 11; dynpvrs* = 12; statptrs* = 13; statpvrs* = 14;
     C4 = 10H; C6 = 40H; C8 = 100H; C10 = 400H; C12 = 1000H; C14 = 4000H; C16 = 10000H;
-    C20 = 100000H; C22 = 400000H; C24 = 1000000H; BL = 0F7000000H;
+    C18 = 40000H; C20 = 100000H; C22 = 400000H; C24 = 1000000H; BL = 0F7000000H;
 
   TYPE Module* = POINTER TO ModDesc;
     Command* = PROCEDURE;
@@ -168,8 +168,8 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
         adr := mod.code + fixorgD*4;
         WHILE adr # mod.code DO
           SYSTEM.GET(adr, inst);
-          mno := inst DIV C16 MOD C8;
-          disp := inst MOD C16;
+          mno := inst DIV C18 MOD C6;
+          disp := inst MOD C18;
           IF mno = 0 THEN (*global*)
             SYSTEM.PUT(adr, (inst DIV C24 * C4 + MT) * C20 + mod.num * 4)
           ELSE (*import*)
@@ -186,7 +186,7 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
         adr := tdx + fixorgT*4;
         WHILE adr # tdx DO
           SYSTEM.GET(adr, inst);
-          mno := inst DIV C24;
+          mno := inst DIV C24 MOD C6;
           vno := inst DIV C12 MOD C12;
           disp := inst MOD C12;
           IF mno = 0 THEN (*global*) inst := tdx + vno
@@ -201,7 +201,7 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
         adr := tdx + fixorgM*4;
         WHILE adr # tdx DO
           SYSTEM.GET(adr, inst);
-          mno := inst DIV C24;
+          mno := inst DIV C24 MOD C6;
           vno := inst DIV C10 MOD C14;
           disp := inst MOD C10;
           IF mno = 0 THEN (*global*) inst := mod.code + vno*4
