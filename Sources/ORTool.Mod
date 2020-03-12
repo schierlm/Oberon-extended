@@ -133,11 +133,11 @@ MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 12.3.20 Extended Oberon*)
       ELSIF k = 2 THEN  (*LDR/STR*)
         IF U THEN Texts.WriteString(W, "ST") ELSE Texts.WriteString(W, "LD") END ;
         IF V THEN Texts.Write(W, "B") ELSE Texts.Write(W, "W") END ;
-        WriteReg(a); w := w MOD 100000H;
+        WriteReg(a);
         IF fixD THEN
           b := w DIV 40000H MOD 40H; (*mno*)
           Texts.WriteString(W, " mno "); Texts.WriteInt(W, b, 3)
-        ELSE WriteReg(b);
+        ELSE WriteReg(b); w := w MOD 100000H;
           IF w >= 80000H THEN w := w - 100000H END ;
           Texts.WriteInt(W, w, 8)
         END
