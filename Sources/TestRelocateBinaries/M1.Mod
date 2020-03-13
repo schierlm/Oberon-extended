@@ -1,0 +1,3 @@
+MODULE M1;
+  CONST C1* = 11;
+END M1.

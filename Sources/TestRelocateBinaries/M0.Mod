@@ -1,0 +1,3 @@
+MODULE M0;
+  CONST C0* = 10;
+END M0.

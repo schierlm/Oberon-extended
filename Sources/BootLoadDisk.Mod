@@ -1,8 +1,8 @@
-MODULE* BootLoadDisk;  (*NW 20.10.2013 / PR 4.2.2014 / AP 7.2.20 for use in Oberon0*)
+MODULE* BootLoadDisk;  (*NW 20.10.2013 / PR 4.2.2014 / AP 13.3.20 for use in Oberon0*)
   IMPORT SYSTEM;
   (* sw0: init SD; sw1: line|disk*)
-  CONST MT = 12; SP = 14; LNK = 15;
-    MTOrg = 20H; MemLim = 0E7EF0H; stackOrg = 80000H;
+  CONST TR = 13; SP = 14; LNK = 15;
+    TrapAdr = 04H; MemLim = 0E7EF0H; stackOrg = 80000H;
     spiData = -48; spiCtrl = -44;
     CARD0 = 1; SPIFAST = 4;
     FSoffset = 80000H;   (*block offset*)
@@ -79,7 +79,7 @@ MODULE* BootLoadDisk;  (*NW 20.10.2013 / PR 4.2.2014 / AP 7.2.20 for use in Ober
     WHILE dst < lim DO ReadSD(src, dst, lim); INC(src); INC(dst, 512) END
   END LoadFromDisk;
 
-BEGIN SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(MT, MTOrg);
+BEGIN SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(TR, TrapAdr);
   IF SYSTEM.REG(LNK) = 0 THEN (*cold start*) LED(80H); InitSPI END ;
   LED(82H); LoadFromDisk;
   SYSTEM.PUT(12, MemLim); SYSTEM.PUT(24, stackOrg); LED(84H)

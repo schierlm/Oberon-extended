@@ -9,3 +9,4 @@
 2020-03-06 ORB - Updated ORB.ThisModule for Project Oberon 2013 and Extended Oberon
 2020-03-09 Input - Move character, text and cursor related constants to module Input
 2020-03-12 Modules, ORL, ORG, ORTool - Use 6 bits for module number (mno) in all instructions
+2020-03-13 Kernel, Modules, System, ORL, ORG, ORTool - Eliminate module table starting at MTOrg

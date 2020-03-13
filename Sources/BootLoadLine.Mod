@@ -1,8 +1,8 @@
-MODULE* BootLoadLine;  (*NW 20.10.2013 / PR 4.2.2014 / AP 7.2.20 for use in Oberon0*)
+MODULE* BootLoadLine;  (*NW 20.10.2013 / PR 4.2.2014 / AP 13.3.20 for use in Oberon0*)
   IMPORT SYSTEM;
   (* sw0: init SD; sw1: line|disk*)
-  CONST MT = 12; SP = 14;
-    MTOrg = 20H; MemLim = 0E7EF0H; stackOrg = 80000H;
+  CONST TR = 13; SP = 14;
+    TrapAdr = 04H; MemLim = 0E7EF0H; stackOrg = 80000H;
     rsData = -56; rsCtrl = -52;
 
   PROCEDURE RecInt(VAR x: INTEGER);
@@ -25,7 +25,7 @@ MODULE* BootLoadLine;  (*NW 20.10.2013 / PR 4.2.2014 / AP 7.2.20 for use in Ober
     END
   END LoadFromLine;
 
-BEGIN SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(MT, MTOrg);
+BEGIN SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(TR, TrapAdr);
   LED(82H); LoadFromLine;
   SYSTEM.PUT(12, MemLim); SYSTEM.PUT(24, stackOrg); LED(84H)
 END BootLoadLine.

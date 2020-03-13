@@ -1,12 +1,12 @@
-MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 9.3.20 Extended Oberon*)
+MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 13.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, FileDir, Files, Modules,
     Input, Display, Viewers, Fonts, Texts, Oberon, MenuViewers, TextFrames;
 
-  CONST Version* = "Extended Oberon System  AP 9.3.20";
+  CONST Version* = "Extended Oberon System  AP 13.3.20";
     StandardMenu = "System.Close System.Copy System.Grow Edit.Search Edit.Store | System.Expand System.Spread System.Clone";
     LogMenu = "Edit.Locate Edit.Search System.Copy System.Grow System.Clear | System.Expand System.Spread System.Clone";
     SystemLog = "System.Log"; SystemTool = "System.Tool";
-    TAB = Input.TAB; CR = Input.CR; LNK = 15; MTOrg = 20H; TaskPeriod = 500; (*ms*)
+    TAB = Input.TAB; CR = Input.CR; LNK = 15; TaskPeriod = 500; (*ms*)
 
   TYPE Handler = PROCEDURE(name: ARRAY OF CHAR);
 
@@ -672,7 +672,7 @@ MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 9.3.20 Extended Ob
 
   PROCEDURE Trap(VAR a: INTEGER; b, c, d: INTEGER);
     VAR u, v, w: INTEGER; mod: Modules.Module;
-  BEGIN u := SYSTEM.REG(LNK);  (*return address deposited in register LNK by the trap (=BLR MT) instruction*)
+  BEGIN u := SYSTEM.REG(LNK);  (*return address deposited in register LNK by the trap (=BLR TR) instruction*)
     SYSTEM.GET(u - 4, v);  (*trap instruction, contains code position and trap number as generated in ORG.Trap*)
     w := v DIV 10H MOD 10H;  (*trap number*)
     IF w = 0 THEN Kernel.New(a, b, c, d)
@@ -728,5 +728,5 @@ MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 9.3.20 Extended Ob
 
 BEGIN Texts.OpenWriter(W); defer := FALSE; T := Oberon.NewTask(Deferred, TaskPeriod);
   Oberon.OpenLog(TextFrames.Text("")); CreateDisplay("Oberon");
-  Kernel.Install(SYSTEM.ADR(Trap), MTOrg); Kernel.Install(SYSTEM.ADR(Abort), 0)
+  Kernel.Install(SYSTEM.ADR(Trap), Kernel.TrapAdr); Kernel.Install(SYSTEM.ADR(Abort), 0)
 END System.

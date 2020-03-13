@@ -1,6 +1,6 @@
-MODULE Kernel;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 7.2.20 Extended Oberon*)
+MODULE Kernel;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 13.3.20 Extended Oberon*)
   IMPORT SYSTEM;
-  CONST SectorLength* = 1024;
+  CONST SectorLength* = 1024; TrapAdr* = 04H;
     timer = -64; spiData = -48; spiCtrl = -44;
     CARD0 = 1; SPIFAST = 4;
     FSoffset = 80000H; (*256MB in 512-byte blocks*)
@@ -69,7 +69,7 @@ MODULE Kernel;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 7.2.20 Extended Ober
   END GetBlock32;
 
   PROCEDURE New*(VAR ptr: LONGINT; tag, len, elemsize: LONGINT);
-    (*called by NEW via MT[0]; ptr is a pointer; tag (or tag-1) is a pointer or blktyp; len and elemsize describe arrays*)
+    (*called by NEW via TR; ptr is a pointer; tag (or tag-1) is a pointer or blktyp; len and elemsize describe arrays*)
     VAR p, size, lim: LONGINT;
   BEGIN
     IF tag MOD 4 = 0 THEN (*record block*)
@@ -367,7 +367,7 @@ MODULE Kernel;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 7.2.20 Extended Ober
   END Trap;
 
   PROCEDURE Init*;
-  BEGIN Install(SYSTEM.ADR(Trap), 20H);  (*install temporary trap*)
+  BEGIN Install(SYSTEM.ADR(Trap), TrapAdr);  (*install temporary trap*)
     SYSTEM.GET(12, MemLim); SYSTEM.GET(24, heapOrg);
     stackOrg := heapOrg; stackSize := 8000H; heapLim := MemLim;
     list1 := 0; list2 := 0; list3 := 0; list0 := heapOrg;

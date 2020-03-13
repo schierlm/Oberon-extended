@@ -1,11 +1,11 @@
 (*  ORP.Compile @
     ORX.WriteFile BootLoad.rsc 512 "D:/Verilog/RISC5/prom.mem"~ *)
 
-MODULE* BootLoad;  (*NW 20.10.2013 / PR 4.2.2014; boot from SDHC disk or line*)
+MODULE* BootLoad;  (*NW 20.10.2013 / PR 4.2.2014; boot from SDHC disk or line / AP 13.3.20*)
   IMPORT SYSTEM;
   (* sw0: init SD; sw1: line|disk*)
-  CONST MT = 12; SP = 14; LNK = 15;
-    MTOrg = 20H; MemLim = 0E7EF0H; stackOrg = 80000H;
+  CONST TR = 13; SP = 14; LNK = 15;
+    TrapAdr = 04H; MemLim = 0E7EF0H; stackOrg = 80000H;
     swi = -60; led = -60; rsData = -56; rsCtrl = -52;
     spiData = -48; spiCtrl = -44;
     CARD0 = 1; SPIFAST = 4;
@@ -104,7 +104,7 @@ MODULE* BootLoad;  (*NW 20.10.2013 / PR 4.2.2014; boot from SDHC disk or line*)
     WHILE dst < lim DO ReadSD(src, dst); INC(src); INC(dst, 512) END
   END LoadFromDisk;
 
-BEGIN SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(MT, MTOrg);
+BEGIN SYSTEM.LDREG(SP, stackOrg); SYSTEM.LDREG(TR, TrapAdr);
   IF SYSTEM.REG(LNK) = 0 THEN (*cold start*)
     LED(80H); InitSPI;
     IF SYSTEM.BIT(swi, 0) THEN LED(81H); LoadFromLine ELSE LED(82H); LoadFromDisk END ;
@@ -118,9 +118,9 @@ ORX.WriteFile BootLoad.rsc "Spartan" "D:/Verilog/RISC/scripts/ins1.mem"~
 ORG.WriteFile BootLoad.rsc "Spartan" "D:/Verilog/RISC3/scripts/ins1.mem" ~
 ORG.WriteFile BootLoad.rsc "Spartan" "D:/Verilog/RISC5/scripts/ins1.mem"~
 
-MODULE* BootLoad;  (*NW 10.2.2013, boot from line only*)
+MODULE* BootLoad;  (*NW 10.2.2013, boot from line only / AP 13.3.20*)
   IMPORT SYSTEM;
-  CONST MT = 12; SP = 14; StkOrg = 0FFFE7F00H;
+  CONST TR = 13; SP = 14; TrapAdr = 04H; StkOrg = 0FFFE7F00H;
     swi = -60; led = -60; data = -56; stat = -52;
 
   PROCEDURE RecInt(VAR x: INTEGER);
@@ -140,11 +140,10 @@ MODULE* BootLoad;  (*NW 10.2.2013, boot from line only*)
       RecInt(adr);
       REPEAT RecInt(dat); SYSTEM.PUT(adr, dat); adr := adr + 4; len := len - 4 UNTIL len = 0;
       RecInt(len)
-    END ;
-    SYSTEM.GET(4, adr); SYSTEM.LDREG(13, adr); SYSTEM.LDREG(12, 20H)
+    END
   END Load;
 
-BEGIN SYSTEM.LDREG(SP, StkOrg); SYSTEM.LDREG(MT, 20H); SYSTEM.PUT(led, 128); 
+BEGIN SYSTEM.LDREG(SP, StkOrg); SYSTEM.LDREG(TR, TrapAdr); SYSTEM.PUT(led, 128); 
   IF ~SYSTEM.BIT(swi, 0) THEN Load END
 END BootLoad.
 

@@ -1,10 +1,14 @@
-MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 Extended Oberon*)
+MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 13.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, Files;
-  CONST versionkey = 1X; MT = 12; DescSize = 84; MnLength = 32;
+  CONST versionkey = 1X; TR = 13; DescSize = 84; MnLength = 32;
     noerr* = 0; nofile* = 1; badversion* = 2; badkey* = 3; badfile* = 4; nospace* = 5; nocmd* = 6; badcmd* = 7; nomod* = 8;
     noref* = 0; clients* = 9; dyntypes* = 10; dynptrs* = 11; dynpvrs* = 12; statptrs* = 13; statpvrs* = 14;
-    C4 = 10H; C6 = 40H; C8 = 100H; C10 = 400H; C12 = 1000H; C14 = 4000H; C16 = 10000H;
-    C18 = 40000H; C20 = 100000H; C22 = 400000H; C24 = 1000000H; BL = 0F7000000H;
+    U = 20000000H; V = 10000000H; B = 100000H;  (*modifier bits*)
+    MOV = 40000000H; IOR = 40060000H;  (*F1 register instructions*)
+    F2 = -2;  (*F2 memory instruction*)
+    BC = 0E7000000H; BL = 0F7000000H;  (*F3 branch instructions*)
+    C4 = 10H; C6 = 40H; C8 = 100H; C10 = 400H; C12 = 1000H; C14 = 4000H; C16 = 10000H; C18 = 40000H;
+    C20 = 100000H; C22 = 400000H; C24 = 1000000H; C26 = 4000000H; C28 = 10000000H; C30 = 40000000H;
 
   TYPE Module* = POINTER TO ModDesc;
     Command* = PROCEDURE;
@@ -22,9 +26,8 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
     RefHandler* = PROCEDURE(src, dst: LONGINT; s: ARRAY OF CHAR; VAR continue: BOOLEAN): INTEGER;
 
   VAR root*, M: Module;
-    MTOrg*, AllocPtr*, res*: INTEGER;
+    AllocPtr*, res*, NofSelected*, NofHidden*, limit: INTEGER;
     importing*, imported*: ModuleName;
-    limit, NofSelected*, NofHidden*: INTEGER;
 
   PROCEDURE ThisFile(name: ARRAY OF CHAR): Files.File;
     VAR i: INTEGER;
@@ -111,7 +114,6 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
         mod.name := name; mod.key := key; mod.refcnt := 0;
         mod.selected := FALSE; mod.hidden := FALSE; mod.marked := FALSE; mod.sel := FALSE;
         mod.data := p;  (*data*)
-        SYSTEM.PUT(mod.num * 4 + MTOrg, p);  (*module table entry*)
         Files.ReadInt(R, n);
         WHILE n > 0 DO SYSTEM.PUT(p, 0); INC(p, 4); DEC(n, 4) END ;  (*variable space*)
         Files.ReadInt(R, n);
@@ -168,18 +170,24 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
         adr := mod.code + fixorgD*4;
         WHILE adr # mod.code DO
           SYSTEM.GET(adr, inst);
-          mno := inst DIV C18 MOD C6;
-          disp := inst MOD C18;
+          pno := inst DIV C26 MOD C4;
+          mno := inst DIV C20 MOD C6;
+          disp := inst MOD C12;
           IF mno = 0 THEN (*global*)
-            SYSTEM.PUT(adr, (inst DIV C24 * C4 + MT) * C20 + mod.num * 4)
+            offset := inst DIV C12 MOD C8 * C16; (*offset[16:23]*)
+            SYSTEM.GET(adr+4, inst);
+            INC(offset, mod.data + inst MOD C16)
           ELSE (*import*)
-            SYSTEM.GET(mod.imp + (mno-1)*4, impmod); v := impmod.num;
-            SYSTEM.PUT(adr, (inst DIV C24 * C4 + MT) * C20 + v*4);
+            SYSTEM.GET(mod.imp + (mno-1)*4, impmod);
             SYSTEM.GET(adr+4, inst); vno := inst MOD C8;
             SYSTEM.GET(impmod.ent + vno*4, offset);
-            IF ODD(inst DIV C8) THEN offset := offset + impmod.code - impmod.data END ;
-            SYSTEM.PUT(adr+4, inst DIV C16 * C16 + offset)
+            IF ODD(inst DIV C8) THEN INC(offset, impmod.code) ELSE INC(offset, impmod.data) END
           END ;
+          SYSTEM.PUT(adr, MOV+U+B + pno*C24 + offset DIV C16); (*mark as fixed up*)
+          pno := inst DIV C24 MOD C4;
+          vno := inst DIV C20 MOD C4;
+          IF inst DIV C30 = F2 THEN inst := (inst DIV C24) * C24 + vno*C20 ELSE inst := IOR + pno*C24 + pno*C20 END ;
+          SYSTEM.PUT(adr+4, inst + offset MOD C16);
           adr := adr - disp*4
         END ;
         (*fixup of type descriptors*)
@@ -538,7 +546,7 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 26.2.20 
   END Collect;
 
   PROCEDURE Init*;
-  BEGIN Files.Init; MTOrg := SYSTEM.REG(MT); SYSTEM.GET(16, AllocPtr); SYSTEM.GET(20, root);
+  BEGIN SYSTEM.LDREG(TR, Kernel.TrapAdr); Files.Init; SYSTEM.GET(16, AllocPtr); SYSTEM.GET(20, root);
     limit := Kernel.stackOrg - Kernel.stackSize; NofHidden := 0; Deselect
   END Init;
 

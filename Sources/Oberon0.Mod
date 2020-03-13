@@ -1,10 +1,10 @@
-MODULE Oberon0; (*Oberon-0 command interpreter / AP 7.2.20 Extended Oberon*)
+MODULE Oberon0; (*Oberon-0 command interpreter / AP 13.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, FileDir, Files, Modules, RS232, PCLink0;
   CONST swi = -60; (*switches*)
     stat = -52; (*RS-232*)
     REQ = 20H; REC = 21H; SND = 22H; ACK = 10H;
     screenbase = 0E7F00H; screensize = 1024 * 768 DIV 8; (*1024 x 768 pixel monocolor display*)
-    maxCode = 8000;
+    maxCode = 8000; TR = 13;
 
   VAR pat: ARRAY 32 OF CHAR;
 
@@ -346,7 +346,8 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 7.2.20 Extended Oberon*)
 
   PROCEDURE Init*; (*establish a working file system (root page) if necessary*)
     VAR a: FileDir.DirPage;
-  BEGIN Kernel.GetSector(FileDir.DirRootAdr, a);
+  BEGIN SYSTEM.LDREG(TR, Kernel.TrapAdr);
+    Kernel.GetSector(FileDir.DirRootAdr, a);
     IF a.mark # FileDir.DirMark THEN
       a.mark := FileDir.DirMark; a.m := 0; a.p0 := 0;
       Kernel.PutSector(FileDir.DirRootAdr, a)

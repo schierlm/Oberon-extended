@@ -1,0 +1,3 @@
+MODULE M2;
+  CONST C2* = 12;
+END M2.
