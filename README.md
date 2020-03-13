@@ -15,6 +15,8 @@ Current features of the Extended Oberon System
 
 **REVISION:** 9.3.2020
 
+For a version of Extended Oberon without a global module table, see http://github.com/andreaspirklbauer/Oberon-extended-no-module-table.
+
 **DOCUMENTATION**
 
 | Topic  | Documentation |
