@@ -1,6 +1,6 @@
 MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.bin / Extended Oberon*)
   IMPORT SYSTEM, Files, Modules, Texts, Oberon;
-  CONST maxCode = 8000; maxBin = 8000; StartAdr = 8; RootAdr = 20;
+  CONST maxCode = 8000; maxBin = 8000; StartAdr = 8; RootAdr = 20; ModOrg = 32;
     U = 20000000H; B = 1; (*modifier bit*)
     MOV = 40000000H; IOR = 40060000H; (*F1 register instructions*)
     BC = 0E7000000H; (*F3 branch instruction*)
@@ -75,30 +75,31 @@ MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.
   END RunRsc;
 
   PROCEDURE RelocateBin(VAR bin: ARRAY OF LONGINT; newStart: INTEGER; VAR res: INTEGER);
-    VAR oldStart, i, x, y, im: INTEGER;
-      M, p: Modules.Module;
-  BEGIN oldStart := bin[StartAdr DIV 4]; bin[StartAdr DIV 4] := newStart;
-    p := SYSTEM.VAL(Modules.Module, SYSTEM.ADR(bin) + bin[RootAdr DIV 4]); (*root of the links of loaded  modules*)
-    WHILE p # NIL DO (*fixup*) M := p;
-      IF M.next # NIL THEN
+    VAR Start, oldStart, p, i, j, x, y, im: INTEGER;
+      M: Modules.Module;
+  BEGIN Start := SYSTEM.ADR(bin); oldStart := bin[StartAdr DIV 4]; bin[StartAdr DIV 4] := newStart;
+    p := bin[RootAdr DIV 4] - oldStart + Start;  (*current root of the links of loaded modules*)
+    WHILE p # 0 DO (*fixup*)
+      M := SYSTEM.VAL(Modules.Module, p);
+      IF M.next # NIL THEN p := SYSTEM.VAL(INTEGER, M.next) - oldStart + Start;
         M.next := SYSTEM.VAL(Modules.Module, SYSTEM.VAL(INTEGER, M.next) - oldStart + newStart)
+      ELSE p := 0
       END ;
-      p := M.next;
       M.data := M.data - oldStart + newStart;
-      M.code := M.code - oldStart + newStart;
-      M.imp := M.imp - oldStart + newStart;
       i := M.code;
-      WHILE i < M.imp DO SYSTEM.GET(i, x);
+      WHILE i < M.imp DO j := i - oldStart + Start; SYSTEM.GET(j, x);
         IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*this MOV+U instruction has been fixed up*)
-          SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - oldStart + newStart;  (*relocate its operand*)
-          SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
-          SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
+          SYSTEM.GET(j+4, y); im := x MOD C16 * C16 + y MOD C16 - oldStart + newStart;  (*relocate its operand*)
+          SYSTEM.PUT(j, x DIV C16 * C16 + im DIV C16);
+          SYSTEM.PUT(j+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
         END ;
         INC(i, 4)
       END ;
-      M.cmd := M.cmd - oldStart + newStart;
+      M.code := M.code - oldStart + newStart;
       i := M.imp;
-      WHILE i < M.cmd DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4) END ;
+      WHILE i < M.cmd DO j := i - oldStart + Start; SYSTEM.GET(j, x); SYSTEM.PUT(j, x - oldStart + newStart); INC(i, 4) END ;
+      M.imp := M.imp - oldStart + newStart;
+      M.cmd := M.cmd - oldStart + newStart;
       M.ent := M.ent - oldStart + newStart;
       M.ptr := M.ptr - oldStart + newStart;
       M.pvr := M.pvr - oldStart + newStart

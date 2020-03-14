@@ -1,5 +1,5 @@
 MODULE M3;  (*no asterisk after the keyword MODULE*)
-  IMPORT SYSTEM, M0, M1, M2;  (*import constants only!*)
+  IMPORT SYSTEM, M0, M1, M2;  (*import constants only for RunRsc*)
   VAR i0, i1, i2: INTEGER;
 
 BEGIN
@@ -12,13 +12,13 @@ ORP.Compile Run.Mod/s M0.Mod/s M1.Mod/s M2.Mod/s M3.Mod/s ~
 ORL.Link M3 ~
 
 Run.RunRsc M3.rsc ~
-Run.RunBin M3.bin ~
+Run.RunBin M3.bin ~  
 
 Tools.Inspect 0 ~
 
 -> this yields this output
 
-  ........ ........ 0000000A 0000000B 0000000C ...
+  ........ ........ 0000000A 0000000B 0000000C ........
 
 
 # The above experiment either runs a pre-linked binary

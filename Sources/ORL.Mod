@@ -1,6 +1,6 @@
 MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, Files, Modules, Texts, Oberon;
-  CONST versionkey = 1X; versionkey0 = 0X; DescSize = 84; MnLength = 32;
+  CONST versionkey = 1X; versionkey0 = 0X; DescSize = 84; MnLength = 32; ModOrg = 32;
     noerr* = 0; nofile* = 1; badversion* = 2; badkey* = 3; badfile* = 4; nospace* = 5;
     U = 20000000H; V = 10000000H; B = 100000H;  (*modifier bits*)
     MOV = 40000000H; IOR = 40060000H;  (*F1 register instructions*)
@@ -235,7 +235,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
   BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
     IF S.class = Texts.Int THEN binStart := S.i; Texts.Scan(S) ELSE binStart := 0 END ;
     IF S.class = Texts.Name THEN
-      root := NIL; Start := Modules.AllocPtr; AllocPtr :=  Start + 32; i := Start;
+      root := NIL; Start := Modules.AllocPtr; AllocPtr :=  Start + ModOrg; i := Start;
       WHILE i < AllocPtr DO SYSTEM.PUT(i, 0); INC(i, 4) END ;
       REPEAT LinkOne(S.s, M); Texts.Scan(S) UNTIL (S.class # Texts.Name) OR (res # noerr);
       IF res = noerr THEN p := root; Texts.WriteString(W, "  linking");
@@ -253,7 +253,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
           M.pvr := M.pvr - Start + binStart
         END ;
         SYSTEM.GET(Start, x);
-        SYSTEM.PUT(Start, BC + (x DIV 4) - 1);  (*branch instruction to the initialization body of the top module*)
+        SYSTEM.PUT(Start, BC + (x - binStart) DIV 4 - 1);  (*branch instruction to the initialization body of the top module*)
         SYSTEM.PUT(Start + 8, binStart);  (*target address of the beginning of the linked binary*)
         SYSTEM.PUT(Start + 12, Kernel.MemLim);  (*limit of available memory; typically overwritten by the boot loader*)
         SYSTEM.PUT(Start + 16, AllocPtr - Start + binStart);  (*address of the end of the module space loaded*)
