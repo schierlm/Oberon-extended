@@ -12,7 +12,7 @@ Current features of the Extended Oberon System
 * Multiple logical displays
 * Improved decoder tools
 * Import any number of modules
-* Module loader resolves all references to external procedures and data at module load time (see http://github.com/andreaspirklbauer/Oberon-fast-access-to-global-module-data), eliminating the need for a  static base register and a global module table
+* Module loader resolves all references to external procedures and global module data at module load time (see http://github.com/andreaspirklbauer/Oberon-fast-access-to-global-module-data), eliminating the need for a  static base register and a global module table
 
 **REVISION:** 13.3.2020
 
