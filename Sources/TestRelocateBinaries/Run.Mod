@@ -1,13 +1,15 @@
 MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.bin / Extended Oberon*)
-  IMPORT SYSTEM, Kernel, Files, Modules, Texts, Oberon;
-  CONST maxCode = 8000; maxBin = 8000; LNK = 15; TrapAdr = 4; StartAdr = 8; RootAdr = 20;
-    MOV = 40000000H; IOR = 40060000H;  (*F1 register instructions*)
-    C4 = 10H; C16 = 10000H; C20 = 100000H; C28 = 10000000H; U = 20000000H; (*modifier bit*)
+  IMPORT SYSTEM, Files, Modules, Texts, Oberon;
+  CONST maxCode = 8000; maxBin = 8000; StartAdr = 8; RootAdr = 20;
+    U = 20000000H; B = 1; (*modifier bit*)
+    MOV = 40000000H; IOR = 40060000H; (*F1 register instructions*)
+    BC = 0E7000000H; (*F3 branch instruction*)
+    C4 = 10H; C16 = 10000H; C20 = 100000H; C28 = 10000000H;
 
   VAR code: ARRAY maxCode OF LONGINT;
     bin: ARRAY maxBin OF INTEGER;
     W: Texts.Writer;
-    
+
   PROCEDURE GetArg(VAR S: Texts.Scanner);
     VAR T: Texts.Text; beg, end, time: LONGINT;
   BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
@@ -72,15 +74,40 @@ MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.
     END
   END RunRsc;
 
-  PROCEDURE Trap(VAR a: INTEGER; b, c, d: INTEGER);  (*trap routine installed by RunBin*)
-    VAR u, v, w: INTEGER;
-  BEGIN u := SYSTEM.REG(LNK); SYSTEM.GET(u - 4, v); w := v DIV 10H MOD 10H; (*trap number*)
-    LED(w + 192); REPEAT UNTIL FALSE
-  END Trap;
+  PROCEDURE RelocateBin(VAR bin: ARRAY OF LONGINT; newStart: INTEGER; VAR res: INTEGER);
+    VAR oldStart, i, x, y, im: INTEGER;
+      M, p: Modules.Module;
+  BEGIN oldStart := bin[StartAdr DIV 4]; bin[StartAdr DIV 4] := newStart;
+    p := SYSTEM.VAL(Modules.Module, SYSTEM.ADR(bin) + bin[RootAdr DIV 4]); (*root of the links of loaded  modules*)
+    WHILE p # NIL DO (*fixup*) M := p;
+      IF M.next # NIL THEN
+        M.next := SYSTEM.VAL(Modules.Module, SYSTEM.VAL(INTEGER, M.next) - oldStart + newStart)
+      END ;
+      p := M.next;
+      M.data := M.data - oldStart + newStart;
+      M.code := M.code - oldStart + newStart;
+      M.imp := M.imp - oldStart + newStart;
+      i := M.code;
+      WHILE i < M.imp DO SYSTEM.GET(i, x);
+        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*this MOV+U instruction was fixed up*)
+          SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - oldStart + newStart;  (*relocate its operand*)
+          SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
+          SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
+        END ;
+        INC(i, 4)
+      END ;
+      M.cmd := M.cmd - oldStart + newStart;
+      i := M.imp;
+      WHILE i < M.cmd DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4) END ;
+      M.ent := M.ent - oldStart + newStart;
+      M.ptr := M.ptr - oldStart + newStart;
+      M.pvr := M.pvr - oldStart + newStart
+    END ;
+    res := Modules.noerr
+  END RelocateBin;
 
   PROCEDURE RunBin*;  (*load and execute pre-linked binary  M.bin*)
-    VAR newStart, oldStart, i, x, y, im: INTEGER;
-      M, p: Modules.Module;
+    VAR newStart, i, x, res: INTEGER;
       body: Modules.Command;
       F: Files.File; R: Files.Rider;
       S: Texts.Scanner;
@@ -92,33 +119,12 @@ MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.
         IF Files.Length(F) < maxBin * 4 THEN
           Files.Set(R, F, 0); Files.ReadInt(R, x); i := 0;
           WHILE ~R.eof DO bin[i] := x; INC(i); Files.ReadInt(R, x) END ; (*read pre-linked binary M.bin from file*)
-          Texts.WriteInt(W, i*4, 6); (*bytes*) Texts.Append(Oberon.Log, W.buf);
-          oldStart := bin[StartAdr DIV 4]; newStart := SYSTEM.ADR(bin);
-          p := SYSTEM.VAL(Modules.Module, newStart + bin[RootAdr DIV 4]); (*current root of the links of loaded  modules / root*)
-          WHILE p # NIL DO (*fixup*) M := p;
-            IF M.next # NIL THEN M.next := SYSTEM.VAL(Modules.Module, SYSTEM.VAL(INTEGER, M.next) - oldStart + newStart) END ;
-            p := M.next;
-            M.data := M.data - oldStart + newStart;
-            M.code := M.code - oldStart + newStart;
-            M.imp := M.imp - oldStart + newStart;
-            i := M.code;
-            WHILE i < M.imp DO SYSTEM.GET(i, x);
-              IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = 1) THEN (*fixed up MOV+U+B instruction*)
-                SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - oldStart + newStart; (*relocate*)
-                SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
-                SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
-              END ;
-              INC(i, 4)
-            END ;
-            M.cmd := M.cmd - oldStart + newStart;
-            i := M.imp;
-            WHILE i < M.cmd DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4) END ;
-            M.ent := M.ent - oldStart + newStart;
-            M.ptr := M.ptr - oldStart + newStart;
-            M.pvr := M.pvr - oldStart + newStart
-          END ;
-          Kernel.Install(SYSTEM.ADR(Trap), newStart + TrapAdr); (*install trap*)
-          body := SYSTEM.VAL(Modules.Command, newStart); body (*branch to initialization body of the top module*)
+          newStart := SYSTEM.ADR(bin);
+          RelocateBin(bin, newStart, res);
+          IF res = Modules.noerr THEN Texts.WriteString(W, " done");
+            body := SYSTEM.VAL(Modules.Command, newStart); body (*branch to the initialization body of the top module*)
+          ELSE Texts.WriteString(W, " failed")
+          END
         ELSE Texts.WriteString(W, " program too long")
         END
       ELSE Texts.WriteString(W, " failed")
@@ -129,3 +135,11 @@ MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.
 
 BEGIN Texts.OpenWriter(W)
 END Run.
+
+ORP.Compile Run.Mod/s ~
+
+ORP.Compile M.Mod/s ~   # generate M.rsc
+ORL.Link M ~            # generate M.bin
+
+Run.RunRsc M.rsc ~      # execute code section of M.rsc
+Run.RunBin M.bin ~      # execute pre-linked binary M.bin
