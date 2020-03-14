@@ -1,6 +1,6 @@
 MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.bin / Extended Oberon*)
   IMPORT SYSTEM, Files, Modules, Texts, Oberon;
-  CONST maxCode = 8000; maxBin = 8000; StartAdr = 8; RootAdr = 20; ModOrg = 32;
+  CONST maxCode = 8000; maxBin = 8000; StartAdr = 8; RootAdr = 20;
     U = 20000000H; B = 1; (*modifier bit*)
     MOV = 40000000H; IOR = 40060000H; (*F1 register instructions*)
     BC = 0E7000000H; (*F3 branch instruction*)
