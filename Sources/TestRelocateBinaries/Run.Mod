@@ -89,7 +89,7 @@ MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.
       M.imp := M.imp - oldStart + newStart;
       i := M.code;
       WHILE i < M.imp DO SYSTEM.GET(i, x);
-        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*this MOV+U instruction was fixed up*)
+        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*this MOV+U instruction has been fixed up*)
           SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - oldStart + newStart;  (*relocate its operand*)
           SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
           SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
