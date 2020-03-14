@@ -147,7 +147,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
         SYSTEM.PUT(p, 0); INC(p, 4);
         Files.ReadInt(R, fixorgP); Files.ReadInt(R, fixorgD);
         Files.ReadInt(R, fixorgT); Files.ReadInt(R, fixorgM);
-        Files.ReadInt(R, w); body := SYSTEM.VAL(Command, mod.code + w - Start + binStart);
+        Files.ReadInt(R, w); body := SYSTEM.VAL(Command, mod.code + w - Start);
         Files.Read(R, ch);
         IF ch # "O" THEN mod := NIL; error(badfile, name) END
       END ;
@@ -218,7 +218,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
           END ;
           SYSTEM.PUT(adr, inst); adr := adr - disp*4
         END ;
-        SYSTEM.PUT(Start, body) (*module initialization body*)
+        SYSTEM.PUT(Start, body) (*address of module initialization body relative to Start*)
       ELSIF res >= badkey THEN importing := name;
         WHILE nofimps > 0 DO DEC(nofimps); DEC(import[nofimps].refcnt) END
       END
@@ -252,8 +252,8 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
           M.ptr := M.ptr - Start + binStart;
           M.pvr := M.pvr - Start + binStart
         END ;
-        SYSTEM.GET(Start, x);
-        SYSTEM.PUT(Start, BC + (x - binStart) DIV 4 - 1);  (*branch instruction to the initialization body of the top module*)
+        SYSTEM.GET(Start, x);  (*address of initialization body of the top module relative to Start*)
+        SYSTEM.PUT(Start, BC + (x DIV 4) - 1);  (*branch instruction to the initialization body of the top module*)
         SYSTEM.PUT(Start + 8, binStart);  (*target address of the beginning of the linked binary*)
         SYSTEM.PUT(Start + 12, Kernel.MemLim);  (*limit of available memory; typically overwritten by the boot loader*)
         SYSTEM.PUT(Start + 16, AllocPtr - Start + binStart);  (*address of the end of the module space loaded*)
