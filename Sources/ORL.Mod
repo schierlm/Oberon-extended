@@ -264,7 +264,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         SYSTEM.PUT(Start + StackAdr, Kernel.stackOrg);  (*current limit of the module area; typically overwritten by the boot loader*)
         SYSTEM.PUT(Start + FPrintAdr, 12345678H);  (*fingerprint*)
         MakeFileName(name, S.s, ".bin"); F := Files.New(name); Files.Set(R, F, 0); i := Start;
-        WHILE i < AllocPtr DO SYSTEM.GET(i, x); Files.WriteInt(R, x); INC(i, 4) END ;          
+        WHILE i < AllocPtr DO SYSTEM.GET(i, x); Files.WriteInt(R, x); INC(i, 4) END ;
         Texts.WriteInt(W, AllocPtr - Start, 7); Files.Register(F)
       ELSE Texts.WriteString(W, "Link error:  "); Texts.WriteString(W, importing);
         IF res = nofile THEN Texts.WriteString(W, " module not found")
