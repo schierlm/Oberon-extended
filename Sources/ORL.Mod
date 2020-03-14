@@ -1,7 +1,8 @@
-MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
+MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, Files, Modules, Texts, Oberon;
-  CONST versionkey = 1X; versionkey0 = 0X; DescSize = 84; MnLength = 32; ModOrg = 32;
+  CONST versionkey = 1X; versionkey0 = 0X; DescSize = 92; MnLength = 32;
     noerr* = 0; nofile* = 1; badversion* = 2; badkey* = 3; badfile* = 4; nospace* = 5;
+    StartAdr = 8; MemAdr = 12; AllocAdr = 16; RootAdr = 20; StackAdr = 24; FPrintAdr = 28; ModOrg = 32;
     U = 20000000H; V = 10000000H; B = 100000H;  (*modifier bits*)
     MOV = 40000000H; IOR = 40060000H;  (*F1 register instructions*)
     F2 = -2;  (*F2 memory instruction*)
@@ -17,7 +18,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
       name*: ModuleName;
       next*: Module;
       key*, num*, size*, refcnt*: INTEGER;
-      data*, code*, imp*, cmd*, ent*, ptr*, pvr*: INTEGER;  (*addresses*)
+      data*, str*, tdx*, code*, imp*, cmd*, ent*, ptr*, pvr*: INTEGER;  (*addresses*)
       selected*, marked, hidden, sel: BOOLEAN
     END ;
 
@@ -64,7 +65,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
       res = badfile: corrupted file;
       res = nospace: insufficient space*)
     VAR mod, impmod: Module;
-      i, n, key, impkey, mno, nofimps, size, tdx: INTEGER;
+      i, n, key, impkey, mno, nofimps, size: INTEGER;
       p, u, v, w: INTEGER;  (*addresses*)
       ch: CHAR;
       body: Command;
@@ -114,9 +115,10 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
         mod.data := p;  (*data*)
         Files.ReadInt(R, n);
         WHILE n > 0 DO SYSTEM.PUT(p, 0); INC(p, 4); DEC(n, 4) END ;  (*variable space*)
+        mod.str := p;  (*strings*)
         Files.ReadInt(R, n);
-        WHILE n > 0 DO Files.Read(R, ch); SYSTEM.PUT(p, ch); INC(p); DEC(n) END ;   (*strings*)
-        tdx := p;  (*type descriptors*)
+        WHILE n > 0 DO Files.Read(R, ch); SYSTEM.PUT(p, ch); INC(p); DEC(n) END ;
+        mod.tdx := p;  (*type descriptors*)
         Files.ReadInt(R, n);
         WHILE n > 0 DO Files.ReadInt(R, w); SYSTEM.PUT(p, w); INC(p, 4); DEC(n, 4) END ;
         mod.code := p;  (*program*)
@@ -189,13 +191,13 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
           adr := adr - disp*4
         END ;
         (*fixup of type descriptors*)
-        adr := tdx + fixorgT*4;
-        WHILE adr # tdx DO
+        adr := mod.tdx + fixorgT*4;
+        WHILE adr # mod.tdx DO
           SYSTEM.GET(adr, inst);
           mno := inst DIV C24 MOD C6;
           vno := inst DIV C12 MOD C12;
           disp := inst MOD C12;
-          IF mno = 0 THEN (*global*) inst := tdx - Start + binStart + vno
+          IF mno = 0 THEN (*global*) inst := mod.tdx - Start + binStart + vno
           ELSE (*import*)
             SYSTEM.GET(mod.imp + (mno-1)*4, impmod);
             SYSTEM.GET(impmod.ent + vno*4, offset);
@@ -204,8 +206,8 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
           SYSTEM.PUT(adr, inst); adr := adr - disp*4
         END ;
         (*fixup of method tables*)
-        adr := tdx + fixorgM*4;
-        WHILE adr # tdx DO
+        adr := mod.tdx + fixorgM*4;
+        WHILE adr # mod.tdx DO
           SYSTEM.GET(adr, inst);
           mno := inst DIV C24 MOD C6;
           vno := inst DIV C10 MOD C14;
@@ -243,6 +245,8 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
           M := p; p := p.next;
           IF M.next # NIL THEN M.next := SYSTEM.VAL(Module, SYSTEM.VAL(INTEGER, M.next) - Start + binStart) END ;
           M.data := M.data - Start + binStart;
+          M.str := M.str - Start + binStart;
+          M.tdx := M.tdx - Start + binStart;
           M.code := M.code - Start + binStart;
           i := M.imp;
           WHILE i < M.cmd DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - Start + binStart); INC(i, 4) END ;
@@ -254,12 +258,12 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
         END ;
         SYSTEM.GET(Start, x);  (*address of initialization body of the top module relative to Start*)
         SYSTEM.PUT(Start, BC + (x DIV 4) - 1);  (*branch instruction to the initialization body of the top module*)
-        SYSTEM.PUT(Start + 8, binStart);  (*target address of the beginning of the linked binary*)
-        SYSTEM.PUT(Start + 12, Kernel.MemLim);  (*limit of available memory; typically overwritten by the boot loader*)
-        SYSTEM.PUT(Start + 16, AllocPtr - Start + binStart);  (*address of the end of the module space loaded*)
-        SYSTEM.PUT(Start + 20, SYSTEM.VAL(INTEGER, root) - Start + binStart);  (*current root of the links of loaded modules*)
-        SYSTEM.PUT(Start + 24, Kernel.stackOrg);  (*current limit of the module area; typically overwritten by the boot loader*)
-        SYSTEM.PUT(Start + 28, 12345678H);  (*fingerprint*)
+        SYSTEM.PUT(Start + StartAdr, binStart);  (*target address of the beginning of the linked binary*)
+        SYSTEM.PUT(Start + MemAdr, Kernel.MemLim);  (*limit of available memory; typically overwritten by the boot loader*)
+        SYSTEM.PUT(Start + AllocAdr, AllocPtr - Start + binStart);  (*address of the end of the module space loaded*)
+        SYSTEM.PUT(Start + RootAdr, SYSTEM.VAL(INTEGER, root) - Start + binStart);  (*current root of the links of loaded modules*)
+        SYSTEM.PUT(Start + StackAdr, Kernel.stackOrg);  (*current limit of the module area; typically overwritten by the boot loader*)
+        SYSTEM.PUT(Start + FPrintAdr, 12345678H);  (*fingerprint*)
         MakeFileName(name, S.s, ".bin"); F := Files.New(name); Files.Set(R, F, 0); i := Start;
         WHILE i < AllocPtr DO SYSTEM.GET(i, x); Files.WriteInt(R, x); INC(i, 4) END ;          
         Texts.WriteInt(W, AllocPtr - Start + binStart, 7); Files.Register(F)
@@ -302,6 +306,99 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 13.3.20 Extended Oberon*)
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END Load;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR Boot linker/loader  AP 13.3.20");
+  PROCEDURE Relocate*(VAR bin: ARRAY OF LONGINT; newStart: INTEGER);  (*relocate prelinked binary  bin*)
+    VAR Start, oldStart, p, i, j, k, x, y, im: INTEGER;
+      M: Module;
+  BEGIN Start := SYSTEM.ADR(bin); oldStart := bin[StartAdr DIV 4]; bin[StartAdr DIV 4] := newStart;
+    p := bin[RootAdr DIV 4] - oldStart + Start;  (*current root of the links of loaded modules*)
+    WHILE p # 0 DO (*fixup*)
+      M := SYSTEM.VAL(Module, p);
+      IF M.next # NIL THEN p := SYSTEM.VAL(INTEGER, M.next) - oldStart + Start;
+        M.next := SYSTEM.VAL(Module, SYSTEM.VAL(INTEGER, M.next) - oldStart + newStart)
+      ELSE p := 0
+      END ;
+      M.data := M.data - oldStart + newStart;
+      M.str := M.str - oldStart + newStart;
+      (*relocate type descriptors*)
+      i := M.tdx - oldStart + Start;
+      WHILE i < M.code - oldStart + Start DO
+        SYSTEM.GET(i, x); INC(i, 4); y := -x-1; (*nofmth*)
+        FOR k := 0 TO y-1 DO SYSTEM.GET(i, x);
+          SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4) (*method table*)
+        END ;
+        INC(i, 4); (*size*)
+        FOR k := 0 TO 2 DO SYSTEM.GET(i, x);
+          IF x # -1 THEN SYSTEM.PUT(i, x - oldStart + newStart) END ; (*extension table of base types*)
+          INC(i, 4)
+        END ;
+        SYSTEM.GET(i, x);
+        WHILE x # -1 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ; (*pointers*)
+        INC(i, 4); SYSTEM.GET(i, x);
+        WHILE x # -1 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ; (*procedures*)
+        INC(i, 4)
+      END ;
+      M.tdx := M.tdx - oldStart + newStart;
+      (*relocate MOV+U and IOR/ADD instruction sequences*)
+      i := M.code - oldStart + Start;
+      WHILE i < M.imp - oldStart + Start DO SYSTEM.GET(i, x);
+        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*this MOV+U instruction has been fixed up*)
+          SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - oldStart + newStart;  (*relocate its operand*)
+          SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
+          SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
+        END ;
+        INC(i, 4)
+      END ;
+      M.code := M.code - oldStart + newStart;
+      (*relocate imports*)
+      i := M.imp - oldStart + Start;
+      WHILE i < M.cmd - oldStart + Start DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4) END ;
+      M.imp := M.imp - oldStart + newStart;
+      M.cmd := M.cmd - oldStart + newStart;
+      M.ent := M.ent - oldStart + newStart;
+      (*relocate pointer and procedure variable references*)
+      i := M.ptr - oldStart + Start; SYSTEM.GET(i, x);
+      WHILE x # 0 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ;
+      i := M.pvr - oldStart + Start; SYSTEM.GET(i, x);
+      WHILE x # 0 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ;
+      M.ptr := M.ptr - oldStart + newStart;
+      M.pvr := M.pvr - oldStart + newStart
+    END
+  END Relocate;
+
+  PROCEDURE Extract*(Fname: ARRAY OF CHAR; VAR code: ARRAY OF LONGINT; VAR len, entry, res: INTEGER);  (*extract code section*)
+    VAR n, data: INTEGER; ch: CHAR; b: BYTE;               (*len in words, entry in bytes*)
+      F: Files.File; R: Files.Rider;
+      name: ARRAY 32 OF CHAR;
+  BEGIN F := Files.Old(Fname);
+    IF F # NIL THEN
+      Files.Set(R, F, 0); Files.ReadString(R, name); Files.ReadInt(R, data); (*key*)
+      Files.ReadByte(R, b); (*version*) Files.ReadInt(R, data); (*size*)
+      Files.ReadString(R, name); (*imports*)
+      WHILE name[0] # 0X DO Files.ReadInt(R, data); (*key*) Files.ReadString(R, name) END ;
+      Files.ReadInt(R, n); (*variable space*)
+      Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n); (*strings*)
+      Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n*4); (*type descriptors*)
+      Files.ReadInt(R, len);
+      IF len > LEN(code) THEN res := nospace
+      ELSE n := 0;
+        WHILE n < len DO Files.ReadInt(R, data); code[n] := data; INC(n) END ; (*code*)
+        Files.ReadString(R, name);
+        WHILE name[0] # 0X DO Files.ReadInt(R, data); Files.ReadString(R, name) END ; (*commands*)
+        Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n*4); (*entries*)
+        Files.ReadInt(R, data);
+        WHILE data >= 0 DO Files.ReadInt(R, data) END ; (*pointer references*)
+        Files.ReadInt(R, data);
+        WHILE data >= 0 DO Files.ReadInt(R, data) END ; (*procedure variable references*)
+        Files.ReadInt(R, data); (*fixorgP*) Files.ReadInt(R, data); (*fixorgD*)
+        Files.ReadInt(R, data); (*fixorgT*) Files.ReadInt(R, data); (*fixorgM*)
+        Files.ReadInt(R, entry);
+        Files.Read(R, ch);
+        IF ch # "O" THEN res := badfile ELSE res := noerr END
+      END
+    ELSE res := nofile
+    END
+  END Extract;
+
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR Boot linker/loader  AP 14.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf); limit := Kernel.stackOrg - Kernel.stackSize
 END ORL.

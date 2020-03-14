@@ -1,4 +1,4 @@
 MODULE M0;
-  CONST C0* = 10;
-  PROCEDURE P0*; BEGIN END P0;
+  IMPORT SYSTEM;
+  CONST C0* = 10;  (*10 decimal = A hexadecimal*)
 END M0.
