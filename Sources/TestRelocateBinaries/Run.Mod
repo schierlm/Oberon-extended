@@ -122,7 +122,7 @@ MODULE Run; (*AP 13.3.20 Run standalone programs M.rsc or pre-linked binaries M.
           newStart := SYSTEM.ADR(bin);
           RelocateBin(bin, newStart, res);
           IF res = Modules.noerr THEN Texts.WriteString(W, " done");
-            body := SYSTEM.VAL(Modules.Command, newStart); body (*branch to the initialization body of the top module*)
+            body := SYSTEM.VAL(Modules.Command, newStart); body (*branch to initialization body of top module*)
           ELSE Texts.WriteString(W, " failed")
           END
         ELSE Texts.WriteString(W, " program too long")
