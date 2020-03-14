@@ -394,8 +394,8 @@ MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code 
   PROCEDURE BuildTD(T: ORB.Type; VAR tdw: LONGINT);
     VAR k, s, nofmth: LONGINT; fld, bot: ORB.Object; t: ORB.Type;
   BEGIN (*type descriptors of base types of T already built*)
-    nofmth := ORB.NofMethods(T);
-    FOR k := 0 TO nofmth DO td[tdw] := -1; INC(tdw) END ;
+    nofmth := ORB.NofMethods(T); td[tdw] := -nofmth-1; INC(tdw); (*sentinel*)
+    FOR k := 0 TO nofmth-1 DO td[tdw] := -1; INC(tdw) END ;
     t := T; fld := NIL;  (*build method table*)
     WHILE t # NIL DO fld := t.dsc;
       IF t.base # NIL THEN bot := t.base.dsc ELSE bot := NIL END ;
@@ -408,7 +408,7 @@ MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code 
       END ;
       t := t.base
     END ;
-    FOR k := nofmth TO 1 BY -1 DO  (*insert displacements in ascending order; keep last -1 entry as sentinel*)
+    FOR k := nofmth TO 1 BY -1 DO  (*insert displacements in ascending order*)
       IF td[tdw-k] # -1 THEN td[tdw-k] := td[tdw-k] + tdw - k - fixorgM; fixorgM := tdw - k ELSE td[tdw-k] := 0 END
     END ;
     s := T.size; (*convert size for heap allocation*)
