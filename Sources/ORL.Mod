@@ -336,7 +336,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
       M.tdx := M.tdx - src + dst;
       i := M.code - src + start;
       WHILE i < M.imp - src + start DO SYSTEM.GET(i, x);
-        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*fixed up MOV+U instruction*)
+        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B DIV C20) THEN  (*fixed up MOV+U instruction*)
           SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - src + dst;
           SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
           SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)

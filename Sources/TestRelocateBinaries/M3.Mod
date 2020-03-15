@@ -13,10 +13,14 @@ MODULE M3;  (*no asterisk after the keyword MODULE*)
   PROCEDURE (ptr: Ptr3) Method31* (str: ARRAY OF CHAR; p: LONGINT);
   BEGIN END Method31;
 
-BEGIN
-  i0 := M0.C0 + 2; SYSTEM.PUT(16, i0);  (*12 decimal = C hexadecimal*)
-  i1 := M1.C1 + 2; SYSTEM.PUT(20, i1);  (*13 decimal = D hexadecimal*)
-  i2 := M2.C2 + 2; SYSTEM.PUT(24, i2)   (*14 decimal = E hexadecimal*)
+  PROCEDURE Do*;
+  BEGIN
+    i0 := M0.C0 + 2; SYSTEM.PUT(16, i0);  (*12 decimal = C hexadecimal*)
+    i1 := M1.C1 + 2; SYSTEM.PUT(20, i1);  (*13 decimal = D hexadecimal*)
+    i2 := M2.C2 + 2; SYSTEM.PUT(24, i2)   (*14 decimal = E hexadecimal*)
+  END Do;
+
+BEGIN Do
 END M3.
 
 ORP.Compile Run.Mod/s M0.Mod/s M1.Mod/s M2.Mod/s M3.Mod/s ~
