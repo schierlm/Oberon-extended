@@ -1,4 +1,4 @@
-MODULE ORX;  (*Oberon boot converter for RISC / AP 9.3.20 Extended Oberon*)
+MODULE ORX;  (*Oberon boot converter for RISC / AP 14.3.20 Extended Oberon*)
   IMPORT Files, Modules, Input, Texts, Oberon;
   CONST CR = Input.CR;
   TYPE Writer = PROCEDURE(VAR R: Files.Rider; x: LONGINT);
@@ -132,7 +132,7 @@ MODULE ORX;  (*Oberon boot converter for RISC / AP 9.3.20 Extended Oberon*)
                   END
                 ELSE Texts.WriteString(W, "  input file not found")
                 END
-              ELSE Texts.WriteString(W, "  destaddr must be >= 0")
+              ELSE Texts.WriteString(W, "  destadr must be >= 0")
               END
             ELSE Texts.WriteString(W, "  blocksize must be >= 0")
             END
@@ -140,10 +140,10 @@ MODULE ORX;  (*Oberon boot converter for RISC / AP 9.3.20 Extended Oberon*)
         END
       END
     END ;
-    IF res = -1 THEN Texts.WriteString(W, "Usage: ORX.WriteStream M.bin M.stream blocksize destaddr") END ;
+    IF res = -1 THEN Texts.WriteString(W, "Usage: ORX.WriteStream M.bin M.stream blocksize destadr") END ;
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END WriteStream;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR boot converter  AP 9.3.20");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR boot converter  AP 14.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
 END ORX.

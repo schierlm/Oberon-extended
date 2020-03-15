@@ -23,6 +23,40 @@ MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 1
   BEGIN Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END EndLine;
 
+  PROCEDURE Extract*(Fname: ARRAY OF CHAR; VAR code: ARRAY OF LONGINT; VAR len, entry, res: INTEGER);  (*extract code section*)
+    VAR n, data: INTEGER; ch: CHAR; b: BYTE;               (*len in words, entry in bytes*)
+      F: Files.File; R: Files.Rider;
+      name: ARRAY 32 OF CHAR;
+  BEGIN F := Files.Old(Fname);
+    IF F # NIL THEN
+      Files.Set(R, F, 0); Files.ReadString(R, name); Files.ReadInt(R, data); (*key*)
+      Files.ReadByte(R, b); (*version*) Files.ReadInt(R, data); (*size*)
+      Files.ReadString(R, name); (*imports*)
+      WHILE name[0] # 0X DO Files.ReadInt(R, data); (*key*) Files.ReadString(R, name) END ;
+      Files.ReadInt(R, n); (*variable space*)
+      Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n); (*strings*)
+      Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n*4); (*type descriptors*)
+      Files.ReadInt(R, len);
+      IF len > LEN(code) THEN res := Modules.nospace
+      ELSE n := 0;
+        WHILE n < len DO Files.ReadInt(R, data); code[n] := data; INC(n) END ; (*code*)
+        Files.ReadString(R, name);
+        WHILE name[0] # 0X DO Files.ReadInt(R, data); Files.ReadString(R, name) END ; (*commands*)
+        Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n*4); (*entries*)
+        Files.ReadInt(R, data);
+        WHILE data >= 0 DO Files.ReadInt(R, data) END ; (*pointer references*)
+        Files.ReadInt(R, data);
+        WHILE data >= 0 DO Files.ReadInt(R, data) END ; (*procedure variable references*)
+        Files.ReadInt(R, data); (*fixorgP*) Files.ReadInt(R, data); (*fixorgD*)
+        Files.ReadInt(R, data); (*fixorgT*) Files.ReadInt(R, data); (*fixorgM*)
+        Files.ReadInt(R, entry);
+        Files.Read(R, ch);
+        IF ch # "O" THEN res := Modules.badfile ELSE res := Modules.noerr END
+      END
+    ELSE res := Modules.nofile
+    END
+  END Extract;
+
   PROCEDURE RunRsc*;  (*extract, load and execute code section of standalone program  M.rsc*)
     VAR len, entry, res: INTEGER;
       body: Modules.Command;
@@ -31,7 +65,7 @@ MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 1
   BEGIN GetArg(S); Texts.WriteString(W, "Run.RunRsc ");
     IF S.class = Texts.Name THEN (*name of object file*)
       Texts.WriteString(W, S.s); Texts.Append(Oberon.Log, W.buf);
-      ORL.Extract(S.s, code, len, entry, res);  (*extract code section from M.rsc*)
+      Extract(S.s, code, len, entry, res);  (*extract code section from M.rsc*)
       IF res = ORL.noerr THEN Texts.WriteString(W, " done");
         body := SYSTEM.VAL(Modules.Command, SYSTEM.ADR(code) + entry); body
       ELSIF res = ORL.nofile THEN Texts.WriteString(W, " failed")
@@ -56,7 +90,7 @@ MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 1
           Files.Set(R, F, 0); Files.ReadInt(R, x); i := 0;
           WHILE ~R.eof DO bin[i] := x; INC(i); Files.ReadInt(R, x) END ; (*read pre-linked binary M.bin from file*)
           newStart := SYSTEM.ADR(bin);
-          ORL.Relocate(bin, newStart); Texts.WriteString(W, " done");
+          ORL.RelocateBin(newStart, newStart); Texts.WriteString(W, " done");
           start := SYSTEM.VAL(Modules.Command, newStart); start (*branch to initialization body of top module*)
         ELSE Texts.WriteString(W, " program too long")
         END

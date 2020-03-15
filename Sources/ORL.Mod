@@ -305,98 +305,93 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END Load;
 
-  PROCEDURE Relocate*(VAR bin: ARRAY OF LONGINT; newStart: INTEGER);  (*relocate prelinked binary  bin*)
-    VAR Start, oldStart, p, i, j, k, x, y, im: INTEGER;
+  PROCEDURE RelocateBin*(start, dst: INTEGER);
+    VAR src, p, i, j, x, y, im: INTEGER;
       M: Module;
-  BEGIN Start := SYSTEM.ADR(bin); oldStart := bin[StartAdr DIV 4]; bin[StartAdr DIV 4] := newStart;
-    p := bin[RootAdr DIV 4] - oldStart + Start;  (*current root of the links of loaded modules*)
+  BEGIN SYSTEM.GET(start + StartAdr, src); SYSTEM.PUT(start + StartAdr, dst);
+    SYSTEM.GET(start + RootAdr, p); p := p - src + start;  (*current root of the links of loaded modules*)
     WHILE p # 0 DO (*fixup*)
       M := SYSTEM.VAL(Module, p);
-      IF M.next # NIL THEN p := SYSTEM.VAL(INTEGER, M.next) - oldStart + Start;
-        M.next := SYSTEM.VAL(Module, SYSTEM.VAL(INTEGER, M.next) - oldStart + newStart)
+      IF M.next # NIL THEN p := SYSTEM.VAL(INTEGER, M.next) - src + start;
+        M.next := SYSTEM.VAL(Module, SYSTEM.VAL(INTEGER, M.next) - src + dst)
       ELSE p := 0
       END ;
-      M.data := M.data - oldStart + newStart;
-      M.str := M.str - oldStart + newStart;
-      (*relocate type descriptors*)
-      i := M.tdx - oldStart + Start;
-      WHILE i < M.code - oldStart + Start DO
-        SYSTEM.GET(i, x); INC(i, 4); y := -x-1; (*nofmth*)
-        FOR k := 0 TO y-1 DO SYSTEM.GET(i, x);
-          SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4) (*method table*)
-        END ;
-        INC(i, 4); (*size*)
-        FOR k := 0 TO 2 DO SYSTEM.GET(i, x);
-          IF x # -1 THEN SYSTEM.PUT(i, x - oldStart + newStart) END ; (*extension table of base types*)
+      M.data := M.data - src + dst;
+      M.str := M.str - src + dst;
+      i := M.tdx - src + start;
+      WHILE i < M.code - src + start DO  (*type descriptors*)
+        SYSTEM.GET(i, x); INC(i, 4); y := -x-1;  (*nofmth*)
+        FOR j := 0 TO y-1 DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - src + dst); INC(i, 4) END ;  (*methods*)
+        INC(i, 4);  (*size*)
+        FOR j := 0 TO 2 DO SYSTEM.GET(i, x);
+          IF x # -1 THEN SYSTEM.PUT(i, x - src + dst) END ;  (*base types*)
           INC(i, 4)
         END ;
         SYSTEM.GET(i, x);
-        WHILE x # -1 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ; (*pointers*)
+        WHILE x # -1 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointers*)
         INC(i, 4); SYSTEM.GET(i, x);
-        WHILE x # -1 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ; (*procedures*)
+        WHILE x # -1 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedures*)
         INC(i, 4)
       END ;
-      M.tdx := M.tdx - oldStart + newStart;
-      (*relocate MOV+U and IOR/ADD instruction sequences*)
-      i := M.code - oldStart + Start;
-      WHILE i < M.imp - oldStart + Start DO SYSTEM.GET(i, x);
-        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*this MOV+U instruction has been fixed up*)
-          SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - oldStart + newStart;  (*relocate its operand*)
+      M.tdx := M.tdx - src + dst;
+      i := M.code - src + start;
+      WHILE i < M.imp - src + start DO SYSTEM.GET(i, x);
+        IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B) THEN  (*fixed up MOV+U instruction*)
+          SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - src + dst;
           SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
           SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
         END ;
         INC(i, 4)
       END ;
-      M.code := M.code - oldStart + newStart;
-      (*relocate imports*)
-      i := M.imp - oldStart + Start;
-      WHILE i < M.cmd - oldStart + Start DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4) END ;
-      M.imp := M.imp - oldStart + newStart;
-      M.cmd := M.cmd - oldStart + newStart;
-      M.ent := M.ent - oldStart + newStart;
-      (*relocate pointer and procedure variable references*)
-      i := M.ptr - oldStart + Start; SYSTEM.GET(i, x);
-      WHILE x # 0 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ;
-      i := M.pvr - oldStart + Start; SYSTEM.GET(i, x);
-      WHILE x # 0 DO SYSTEM.PUT(i, x - oldStart + newStart); INC(i, 4); SYSTEM.GET(i, x) END ;
-      M.ptr := M.ptr - oldStart + newStart;
-      M.pvr := M.pvr - oldStart + newStart
+      M.code := M.code - src + dst;
+      i := M.imp - src + start;
+      WHILE i < M.cmd - src + start DO
+        SYSTEM.GET(i, x); SYSTEM.PUT(i, x - src + dst); INC(i, 4)  (*imports*)
+      END ;
+      M.imp := M.imp - src + dst;
+      M.cmd := M.cmd - src + dst;
+      M.ent := M.ent - src + dst;
+      i := M.ptr - src + start; SYSTEM.GET(i, x);
+      WHILE x # 0 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointers*)
+      i := M.pvr - src + start; SYSTEM.GET(i, x);
+      WHILE x # 0 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedures*)
+      M.ptr := M.ptr - src + dst;
+      M.pvr := M.pvr - src + dst
     END
-  END Relocate;
+  END RelocateBin;
 
-  PROCEDURE Extract*(Fname: ARRAY OF CHAR; VAR code: ARRAY OF LONGINT; VAR len, entry, res: INTEGER);  (*extract code section*)
-    VAR n, data: INTEGER; ch: CHAR; b: BYTE;               (*len in words, entry in bytes*)
-      F: Files.File; R: Files.Rider;
-      name: ARRAY 32 OF CHAR;
-  BEGIN F := Files.Old(Fname);
-    IF F # NIL THEN
-      Files.Set(R, F, 0); Files.ReadString(R, name); Files.ReadInt(R, data); (*key*)
-      Files.ReadByte(R, b); (*version*) Files.ReadInt(R, data); (*size*)
-      Files.ReadString(R, name); (*imports*)
-      WHILE name[0] # 0X DO Files.ReadInt(R, data); (*key*) Files.ReadString(R, name) END ;
-      Files.ReadInt(R, n); (*variable space*)
-      Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n); (*strings*)
-      Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n*4); (*type descriptors*)
-      Files.ReadInt(R, len);
-      IF len > LEN(code) THEN res := nospace
-      ELSE n := 0;
-        WHILE n < len DO Files.ReadInt(R, data); code[n] := data; INC(n) END ; (*code*)
-        Files.ReadString(R, name);
-        WHILE name[0] # 0X DO Files.ReadInt(R, data); Files.ReadString(R, name) END ; (*commands*)
-        Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n*4); (*entries*)
-        Files.ReadInt(R, data);
-        WHILE data >= 0 DO Files.ReadInt(R, data) END ; (*pointer references*)
-        Files.ReadInt(R, data);
-        WHILE data >= 0 DO Files.ReadInt(R, data) END ; (*procedure variable references*)
-        Files.ReadInt(R, data); (*fixorgP*) Files.ReadInt(R, data); (*fixorgD*)
-        Files.ReadInt(R, data); (*fixorgT*) Files.ReadInt(R, data); (*fixorgM*)
-        Files.ReadInt(R, entry);
-        Files.Read(R, ch);
-        IF ch # "O" THEN res := badfile ELSE res := noerr END
+  PROCEDURE Relocate*;  (*relocate pre-linked binary M.bin to destadr and write result to output file*)
+    VAR f, g: Files.File; Rf, Rg: Files.Rider;
+      start, i, filelen, destadr, res: INTEGER; b: BYTE;
+      name, name1: ARRAY 32 OF CHAR;
+      S: Texts.Scanner;
+  BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S); res := -1;
+    IF S.class = Texts.Name THEN name := S.s; Texts.Scan(S);
+      IF S.class = Texts.Name THEN name1 := S.s; Texts.Scan(S);
+        IF S.class = Texts.Int THEN res := 0; destadr := S.i; Texts.WriteString(W, "  relocating ");
+          Texts.WriteString(W, name); Texts.Write(W, " "); Texts.WriteString(W, name1); Texts.WriteInt(W, destadr, 6);
+          IF destadr >= 0 THEN
+            f := Files.Old(name);
+            IF f # NIL THEN filelen := Files.Length(f);
+              IF filelen > 0 THEN
+                Files.Set(Rf, f, 0); Files.ReadByte(Rf, b); start := Modules.AllocPtr; i := start;
+                WHILE ~Rf.eof DO SYSTEM.PUT(i, b); INC(i); Files.ReadByte(Rf, b) END ;
+                RelocateBin(start, destadr);
+                g := Files.New(name1); Files.Set(Rg, g, 0); i := start;
+                WHILE i < start + filelen DO SYSTEM.GET(i, b); Files.WriteByte(Rg, b); INC(i) END ;
+                Files.Register(g); Texts.WriteInt(W, Files.Length(g), 7)
+              ELSE Texts.WriteString(W, "  input file empty")
+              END
+            ELSE Texts.WriteString(W, "  input file not found")
+            END
+          ELSE Texts.WriteString(W, "  destadr must be >= 0")
+          END
+        END
       END
-    ELSE res := nofile
-    END
-  END Extract;
+    END ;
+    IF res = -1 THEN Texts.WriteString(W, "Usage: ORX.Relocate M.bin N.bin destadr") END ;
+    Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
+  END Relocate;
 
 BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR Boot linker/loader  AP 14.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf); limit := Kernel.stackOrg - Kernel.stackSize
