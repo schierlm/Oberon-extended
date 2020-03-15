@@ -345,9 +345,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
       END ;
       M.code := M.code - src + dst;
       i := M.imp - src + start;
-      WHILE i < M.cmd - src + start DO
-        SYSTEM.GET(i, x); SYSTEM.PUT(i, x - src + dst); INC(i, 4)  (*imports*)
-      END ;
+      WHILE i < M.cmd - src + start DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - src + dst); INC(i, 4) END ;  (*imports*)
       M.imp := M.imp - src + dst;
       M.cmd := M.cmd - src + dst;
       M.ent := M.ent - src + dst;
