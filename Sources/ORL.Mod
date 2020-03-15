@@ -387,7 +387,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         END
       END
     END ;
-    IF res = -1 THEN Texts.WriteString(W, "Usage: ORX.Relocate M.bin N.bin destadr") END ;
+    IF res = -1 THEN Texts.WriteString(W, "Usage: ORL.Relocate M.bin N.bin destadr") END ;
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END Relocate;
 
