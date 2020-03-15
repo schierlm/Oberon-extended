@@ -1,13 +1,12 @@
 MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 14.3.20 Extended Oberon*)
   IMPORT SYSTEM, Files, Modules, Texts, Oberon, ORL;
-  CONST maxCode = 8000; maxBin = 8000; StartAdr = 8; RootAdr = 20;
+  CONST maxCode = 8000; StartAdr = 8; RootAdr = 20;
     U = 20000000H; B = 1; (*modifier bit*)
     MOV = 40000000H; IOR = 40060000H; (*F1 register instructions*)
     BC = 0E7000000H; (*F3 branch instruction*)
     C4 = 10H; C16 = 10000H; C20 = 100000H; C28 = 10000000H;
 
   VAR code: ARRAY maxCode OF LONGINT;
-    bin: ARRAY maxBin OF INTEGER;
     W: Texts.Writer;
 
   PROCEDURE GetArg(VAR S: Texts.Scanner);
@@ -76,30 +75,6 @@ MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 1
     END
   END RunRsc;
 
-  PROCEDURE RunBin*;  (*load and execute pre-linked binary  M.bin*)
-    VAR newStart, i, x: INTEGER;
-      start: Modules.Command;
-      F: Files.File; R: Files.Rider;
-      S: Texts.Scanner;
-  BEGIN GetArg(S); Texts.WriteString(W, "Run.RunBin ");
-    IF S.class = Texts.Name THEN (*name of binary file*)
-      Texts.WriteString(W, S.s); Texts.Append(Oberon.Log, W.buf);
-      F := Files.Old(S.s);
-      IF F # NIL THEN
-        IF Files.Length(F) < maxBin * 4 THEN
-          Files.Set(R, F, 0); Files.ReadInt(R, x); i := 0;
-          WHILE ~R.eof DO bin[i] := x; INC(i); Files.ReadInt(R, x) END ; (*read pre-linked binary M.bin from file*)
-          newStart := SYSTEM.ADR(bin);
-          ORL.RelocateBin(newStart, newStart); Texts.WriteString(W, " done");
-          start := SYSTEM.VAL(Modules.Command, newStart); start (*branch to initialization body of top module*)
-        ELSE Texts.WriteString(W, " program too long")
-        END
-      ELSE Texts.WriteString(W, " failed")
-      END ;
-      EndLine
-    END
-  END RunBin;
-
 BEGIN Texts.OpenWriter(W)
 END Run.
 
@@ -109,4 +84,4 @@ ORP.Compile M.Mod/s ~   # generate M.rsc
 ORL.Link M ~            # generate M.bin
 
 Run.RunRsc M.rsc ~      # execute code section of M.rsc
-Run.RunBin M.bin ~      # execute pre-linked binary M.bin
+ORL.Execute M.bin ~     # execute pre-linked binary M.bin
