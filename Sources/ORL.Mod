@@ -393,7 +393,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
       body: Modules.Command;
       F: Files.File; R: Files.Rider;
       S: Texts.Scanner;
-  BEGIN  Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
+  BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
     IF S.class = Texts.Name THEN
       Texts.WriteString(W, "  executing "); Texts.WriteString(W, S.s);
       F := Files.Old(S.s);
