@@ -356,9 +356,9 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
   END RelocateBin;
 
   PROCEDURE Relocate*;  (*relocate pre-linked binary M.bin to destadr and write result to output file*)
-    VAR F: Files.File; R: Files.Rider;
-      start, i, filelen, destadr, res: INTEGER; b: BYTE;
+    VAR start, i, filelen, destadr, res: INTEGER; b: BYTE;
       name, name1: ARRAY 32 OF CHAR;
+      F: Files.File; R: Files.Rider;
       S: Texts.Scanner;
   BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S); res := -1;
     IF S.class = Texts.Name THEN name := S.s; Texts.Scan(S);
