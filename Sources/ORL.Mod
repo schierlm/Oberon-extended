@@ -356,7 +356,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
   END RelocateBin;
 
   PROCEDURE Relocate*;  (*relocate pre-linked binary M.bin to destadr and write result to output file*)
-    VAR f, g: Files.File; Rf, Rg: Files.Rider;
+    VAR F: Files.File; R: Files.Rider;
       start, i, filelen, destadr, res: INTEGER; b: BYTE;
       name, name1: ARRAY 32 OF CHAR;
       S: Texts.Scanner;
@@ -366,16 +366,15 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         IF S.class = Texts.Int THEN res := 0; destadr := S.i;
           Texts.WriteString(W, "  relocating "); Texts.WriteString(W, name); Texts.WriteString(W, " => ");
           Texts.WriteString(W, name1); Texts.WriteString(W, " at address "); Texts.WriteInt(W, destadr, 7);
-          IF destadr >= 0 THEN
-            f := Files.Old(name);
-            IF f # NIL THEN filelen := Files.Length(f);
+          IF destadr >= 0 THEN F := Files.Old(name);
+            IF F # NIL THEN filelen := Files.Length(F);
               IF filelen > 0 THEN
-                Files.Set(Rf, f, 0); Files.ReadByte(Rf, b); start := Modules.AllocPtr; i := start;
-                WHILE ~Rf.eof DO SYSTEM.PUT(i, b); INC(i); Files.ReadByte(Rf, b) END ;
+                Files.Set(R, F, 0); Files.ReadByte(R, b); start := Modules.AllocPtr; i := start;
+                WHILE ~R.eof DO SYSTEM.PUT(i, b); INC(i); Files.ReadByte(R, b) END ;
                 RelocateBin(start, destadr);
-                g := Files.New(name1); Files.Set(Rg, g, 0); i := start;
-                WHILE i < start + filelen DO SYSTEM.GET(i, b); Files.WriteByte(Rg, b); INC(i) END ;
-                Files.Register(g); Texts.WriteInt(W, Files.Length(g), 7)
+                F := Files.New(name1); Files.Set(R, F, 0); i := start;
+                WHILE i < start + filelen DO SYSTEM.GET(i, b); Files.WriteByte(R, b); INC(i) END ;
+                Files.Register(F); Texts.WriteInt(W, Files.Length(F), 7)
               ELSE Texts.WriteString(W, "  input file empty")
               END
             ELSE Texts.WriteString(W, "  input file not found")
