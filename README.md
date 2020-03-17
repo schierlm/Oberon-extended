@@ -14,7 +14,7 @@ Current features of the Extended Oberon System
 * Import any number of modules
 * Elimination of the concept of static base, the MT register, and the module table headed by MTOrg
 * No 64KB limitations for offsets within a module's data area, neither for global nor for imported module data
-* Module loader resolves all references to external procedures and global module data at load/link time
+* Module loader resolves all references to external procedures and global module data at load/link time - an access to an external object is no different than an access to a non-imported global object
 * Freely relocatable and executable pre-linked binaries M.bin using ORL.Relocate and ORL.Execute
 * Possibility to generate pre-linked boot-loaders consisting of multiple modules using ORL.Link
 
