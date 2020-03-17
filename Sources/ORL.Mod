@@ -174,7 +174,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
           mno := inst DIV C20 MOD C6;
           disp := inst MOD C12;
           IF mno = 0 THEN (*global*)
-            offset := inst DIV C12 MOD C8 * C16;  (*offset[16:23]*)
+            offset := inst DIV C12 MOD C8 * C16;
             SYSTEM.GET(adr+4, inst);
             INC(offset, mod.data + inst MOD C16)
           ELSE (*import*)
@@ -306,56 +306,57 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END Load;
 
-  PROCEDURE RelocateBin*(start, dst: INTEGER);  (*relocate pre-linked binary loaded at Mem[start] to dst*)
-    VAR src, p, i, j, x, y, im: INTEGER; M: Module;
+  PROCEDURE RelocateBin*(start, dst: INTEGER);  (*relocate pre-linked binary loaded at Mem[start]*)
+    VAR src, p, i, j, x, y, im: INTEGER;
+      M: Module;
   BEGIN SYSTEM.GET(start + StartAdr, src); SYSTEM.PUT(start + StartAdr, dst); SYSTEM.GET(start + RootAdr, p);
-    p := p + start;
+    p := p + start; dst := dst - src; start := start - src;
     WHILE p # 0 DO (*fixup*)
       M := SYSTEM.VAL(Module, p); p := SYSTEM.VAL(INTEGER, M.next);
-      IF p # 0 THEN M.next := SYSTEM.VAL(Module, p - src + dst); p := p - src + start END ;
-      M.data := M.data - src + dst;
-      M.str := M.str - src + dst;
-      i := M.tdx - src + start;
-      WHILE i < M.code - src + start DO  (*type descriptors*)
+      IF p # 0 THEN M.next := SYSTEM.VAL(Module, p + dst); p := p + start END ;
+      M.data := M.data + dst;
+      M.str := M.str + dst;
+      i := M.tdx + start; j := M.code + start;
+      WHILE i < j DO  (*type descriptors*)
         SYSTEM.GET(i, x); INC(i, 4); y := -x-1;  (*nofmth*)
-        FOR j := 0 TO y-1 DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - src + dst); INC(i, 4) END ;  (*methods*)
+        WHILE y > 0 DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x + dst); INC(i, 4); DEC(y) END ;  (*methods*)
         INC(i, 4);  (*size*)
-        FOR j := 0 TO 2 DO SYSTEM.GET(i, x);
-          IF x # -1 THEN SYSTEM.PUT(i, x - src + dst) END ;  (*base types*)
+        FOR y := 0 TO 2 DO SYSTEM.GET(i, x);
+          IF x # -1 THEN SYSTEM.PUT(i, x + dst) END ;  (*base types*)
           INC(i, 4)
         END ;
         SYSTEM.GET(i, x);
-        WHILE x # -1 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointer references*)
+        WHILE x # -1 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointer references*)
         INC(i, 4); SYSTEM.GET(i, x);
-        WHILE x # -1 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable references*)
+        WHILE x # -1 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable references*)
         INC(i, 4)
       END ;
-      M.tdx := M.tdx - src + dst;
-      i := M.code - src + start;
-      WHILE i < M.imp - src + start DO SYSTEM.GET(i, x);
+      M.tdx := M.tdx + dst;
+      i := M.code + start; j := M.imp + start;
+      WHILE i < j DO SYSTEM.GET(i, x);
         IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B DIV C20) THEN  (*marked as fixed up*)
-          SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 - src + dst;
+          SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 + dst;
           SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
           SYSTEM.PUT(i+4, y DIV C16 * C16 + im MOD C16); INC(i, 4)
         END ;
         INC(i, 4)
       END ;
-      M.code := M.code - src + dst;
-      i := M.imp - src + start;
-      WHILE i < M.cmd - src + start DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x - src + dst); INC(i, 4) END ;  (*imports*)
-      M.imp := M.imp - src + dst;
-      M.cmd := M.cmd - src + dst;
-      M.ent := M.ent - src + dst;
-      i := M.ptr - src + start; SYSTEM.GET(i, x);
-      WHILE x # 0 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointer references*)
-      i := M.pvr - src + start; SYSTEM.GET(i, x);
-      WHILE x # 0 DO SYSTEM.PUT(i, x - src + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable references*)
-      M.ptr := M.ptr - src + dst;
-      M.pvr := M.pvr - src + dst
+      M.code := M.code + dst;
+      i := M.imp + start; j := M.cmd + start;
+      WHILE i < j DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x + dst); INC(i, 4) END ;  (*imports*)
+      M.imp := M.imp + dst;
+      M.cmd := M.cmd + dst;
+      M.ent := M.ent + dst;
+      i := M.ptr + start; SYSTEM.GET(i, x);
+      WHILE x # 0 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointer references*)
+      i := M.pvr + start; SYSTEM.GET(i, x);
+      WHILE x # 0 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable references*)
+      M.ptr := M.ptr + dst;
+      M.pvr := M.pvr + dst
     END
   END RelocateBin;
 
-  PROCEDURE Relocate*;  (*relocate pre-linked binary M.bin to destadr and write result to output file*)
+  PROCEDURE Relocate*;  (*relocate pre-linked binary M.bin and write result to output file*)
     VAR start, i, filelen, destadr, res: INTEGER; b: BYTE;
       name, name1: ARRAY 32 OF CHAR;
       F: Files.File; R: Files.Rider;

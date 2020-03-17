@@ -175,7 +175,7 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 14.3.20 
           mno := inst DIV C20 MOD C6;
           disp := inst MOD C12;
           IF mno = 0 THEN (*global*)
-            offset := inst DIV C12 MOD C8 * C16; (*offset[16:23]*)
+            offset := inst DIV C12 MOD C8 * C16;
             SYSTEM.GET(adr+4, inst);
             INC(offset, mod.data + inst MOD C16)
           ELSE (*import*)
@@ -184,7 +184,7 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 14.3.20 
             SYSTEM.GET(impmod.ent + vno*4, offset);
             IF ODD(inst DIV C8) THEN INC(offset, impmod.code) ELSE INC(offset, impmod.data) END
           END ;
-          SYSTEM.PUT(adr, MOV+U+B + pno*C24 + offset DIV C16); (*mark as fixed up*)
+          SYSTEM.PUT(adr, MOV+U+B + pno*C24 + offset DIV C16);  (*mark as fixed up*)
           pno := inst DIV C24 MOD C4;
           vno := inst DIV C20 MOD C4;
           IF inst DIV C30 = F2 THEN inst := (inst DIV C24) * C24 + vno*C20 ELSE inst := IOR + pno*C24 + pno*C20 END ;
