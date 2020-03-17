@@ -314,8 +314,6 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
     WHILE p # 0 DO (*fixup*)
       M := SYSTEM.VAL(Module, p); p := SYSTEM.VAL(INTEGER, M.next);
       IF p # 0 THEN M.next := SYSTEM.VAL(Module, p + dst); p := p + start END ;
-      M.data := M.data + dst;
-      M.str := M.str + dst;
       i := M.tdx + start; j := M.code + start;
       WHILE i < j DO  (*type descriptors*)
         SYSTEM.GET(i, x); INC(i, 4); y := -x-1;  (*nofmth*)
@@ -331,9 +329,8 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         WHILE x # -1 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable references*)
         INC(i, 4)
       END ;
-      M.tdx := M.tdx + dst;
-      i := M.code + start; j := M.imp + start;
-      WHILE i < j DO SYSTEM.GET(i, x);
+      j := M.imp + start;
+      WHILE i < j DO SYSTEM.GET(i, x);  (*code*)
         IF (x DIV C28 * C28 = MOV+U) & (x DIV C20 MOD C4 = B DIV C20) THEN  (*marked as fixed up*)
           SYSTEM.GET(i+4, y); im := x MOD C16 * C16 + y MOD C16 + dst;
           SYSTEM.PUT(i, x DIV C16 * C16 + im DIV C16);
@@ -341,16 +338,19 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         END ;
         INC(i, 4)
       END ;
-      M.code := M.code + dst;
-      i := M.imp + start; j := M.cmd + start;
+      j := M.cmd + start;
       WHILE i < j DO SYSTEM.GET(i, x); SYSTEM.PUT(i, x + dst); INC(i, 4) END ;  (*imports*)
-      M.imp := M.imp + dst;
-      M.cmd := M.cmd + dst;
-      M.ent := M.ent + dst;
       i := M.ptr + start; SYSTEM.GET(i, x);
       WHILE x # 0 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointer references*)
       i := M.pvr + start; SYSTEM.GET(i, x);
       WHILE x # 0 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable references*)
+      M.data := M.data + dst;
+      M.str := M.str + dst;
+      M.tdx := M.tdx + dst;
+      M.code := M.code + dst;
+      M.imp := M.imp + dst;
+      M.cmd := M.cmd + dst;
+      M.ent := M.ent + dst;
       M.ptr := M.ptr + dst;
       M.pvr := M.pvr + dst
     END
