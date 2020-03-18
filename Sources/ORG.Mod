@@ -409,7 +409,7 @@ MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code 
       t := t.base
     END ;
     FOR k := nofmth TO 1 BY -1 DO  (*insert displacements in ascending order*)
-      IF td[tdw-k] # -1 THEN td[tdw-k] := td[tdw-k] + tdw - k - fixorgM; fixorgM := tdw - k ELSE td[tdw-k] := 0 END
+      IF td[tdw-k] # -1 THEN td[tdw-k] := td[tdw-k] + tdw - k - fixorgM; fixorgM := tdw - k END
     END ;
     s := T.size; (*convert size for heap allocation*)
     IF s <= 24 THEN s := 32 ELSIF s <= 56 THEN s := 64 ELSIF s <= 120 THEN s := 128
