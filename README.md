@@ -3,7 +3,7 @@ The Extended Oberon System (EOS) is a revision of the *FPGA Oberon* operating sy
 
 Note: In this repository, the term "FPGA Oberon" refers to a re-implementation of the original "Project Oberon" on an FPGA development board around 2013, as published at www.projectoberon.com.
 
-Current features of the Extended Oberon System
+Features
 
 * Revised Oberon-2 programming language, implementing a strict superset of Revised Oberon (=Oberon-07)
 * Safe module unloading
@@ -17,6 +17,8 @@ Current features of the Extended Oberon System
 * Module loader resolves all references to external procedures and global module data at load/link time - an access to an external object is no different than an access to a non-imported global object
 * Freely relocatable and executable pre-linked binaries M.bin using ORL.Relocate and ORL.Execute
 * Possibility to generate pre-linked boot-loaders consisting of multiple modules using ORL.Link
+
+For an Extended Oberon system that does not use any fixup chains, see http://github.com/andreaspirklbauer/Oberon-system-without-fixup-chains.
 
 **REVISION:** 17.3.2020
 
