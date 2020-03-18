@@ -260,7 +260,7 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 13.3.20 Extended Oberon*)
     WHILE name[0] # 0X DO Files.ReadInt(R, data); (*key*) Files.ReadString(R, name) END ;
     Files.ReadInt(R, n); (*variable space*)
     Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n); (*strings*)
-    Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n*4); (*type descriptors*)
+    Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n); (*type descriptors*)
     Files.ReadInt(R, codelen);
     IF codelen > LEN(code) THEN res := Modules.nospace
     ELSE n := 0;
