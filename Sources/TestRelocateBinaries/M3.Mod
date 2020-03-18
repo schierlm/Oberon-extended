@@ -28,7 +28,7 @@ ORL.Link M3 ~                      # default destadr = 0
 ORL.Relocate M3.bin M4.bin 1024 ~  # relocate the pre-linked binary to destadr = 1024
 
 Run.RunRsc M1.rsc ~   # see the source file M1.Mod
-Tools.Inspect 0 ~     # yields this output:  .... .... 0000000A 0000000B .... ....
+Tools.Inspect 0 ~     # yields this output:  .... .... 0000000A .... ....
 
 ORL.Execute M3.bin ~  # will automatically relocate from destadr 0 to the actual location  
 ORL.Execute M4.bin ~  # will automatically relocate from destadr 1024 to the actual location  

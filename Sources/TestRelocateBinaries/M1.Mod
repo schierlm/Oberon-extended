@@ -3,14 +3,13 @@ MODULE M1;
   CONST C1* = 11;  (*11 decimal = B hexadecimal*)
   VAR i0, i1: INTEGER;
 BEGIN
-  i0 := M0.C0; SYSTEM.PUT(8, i0);   (*10 decimal = A hexadecimal*)
-  i1 := C1; SYSTEM.PUT(12, i1);  (*11 decimal = B hexadecimal*)
+  i0 := M0.C0; SYSTEM.PUT(8, i0)   (*10 decimal = A hexadecimal*)
 END M1.
 
 ORP.Compile Run.Mod/s M0.Mod/s M1.Mod/s ~
 
 Run.RunRsc M1.rsc ~  
-Tools.Inspect 0 ~   # yields this output:  .... .... 0000000A 0000000B .... ....
+Tools.Inspect 0 ~   # yields this output:  .... .... 0000000A .... ....
 
 # This experiment executes a single object file M.rsc which imports
 # only constants from other modules (module M0 in this example).
