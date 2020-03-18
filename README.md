@@ -12,13 +12,16 @@ Features
 * Multiple logical displays
 * Improved decoder tools
 * Import any number of modules
+
+Behind the scenes
+
 * Elimination of the concept of static base, the MT register, and the module table headed by MTOrg
 * No 64KB limitations for offsets within a module's data area, neither for global nor for imported module data
 * Module loader resolves all references to external procedures and global module data at load/link time - an access to an external object is no different than an access to a non-imported global object
 * Freely relocatable and executable pre-linked binaries M.bin using ORL.Relocate and ORL.Execute
 * Possibility to generate pre-linked boot-loaders consisting of multiple modules using ORL.Link
 
-For an Extended Oberon system that does not use any fixup chains, see http://github.com/andreaspirklbauer/Oberon-system-without-fixup-chains.
+For a variant of EOS that does not use fixup chains, see http://github.com/andreaspirklbauer/Oberon-system-without-fixup-chains.
 
 **REVISION:** 17.3.2020
 
