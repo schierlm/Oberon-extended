@@ -21,8 +21,6 @@ Behind the scenes
 * Freely relocatable and executable pre-linked binaries M.bin using ORL.Relocate and ORL.Execute
 * Possibility to generate pre-linked boot-loaders consisting of multiple modules using ORL.Link
 
-For a variant of EOS that does not use fixup chains, see http://github.com/andreaspirklbauer/Oberon-system-without-fixup-chains.
-
 **REVISION:** 17.3.2020
 
 **DOCUMENTATION**
