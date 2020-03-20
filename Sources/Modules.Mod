@@ -210,10 +210,10 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 14.3.20 
         adr := mod.tdx + fixorgM*4;
         WHILE adr # mod.tdx DO
           SYSTEM.GET(adr, inst);
-          mno := inst DIV C24 MOD C6;
-          vno := inst DIV C10 MOD C14;
+          mno := inst DIV C26 MOD C6;
+          vno := inst DIV C10 MOD C16;
           disp := inst MOD C10;
-          IF mno = 0 THEN (*global*) inst := mod.code + vno*4
+          IF mno = 0 THEN (*global*) inst := mod.code + vno
           ELSE (*import*)
             SYSTEM.GET(mod.imp + (mno-1)*4, impmod);
             SYSTEM.GET(impmod.ent + vno*4, offset);

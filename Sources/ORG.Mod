@@ -401,8 +401,7 @@ MODULE ORG; (* N.Wirth, 16.4.2016 / 4.4.2017 / 31.5.2019  Oberon compiler; code 
       IF t.base # NIL THEN bot := t.base.dsc ELSE bot := NIL END ;
       WHILE fld # bot DO
         IF (fld.class = ORB.Const) & (td[tdw-fld.lev-1] = -1) THEN
-          IF t.mno = 0 THEN k := fld.val DIV 4 (*mthadr*) ELSE k := fld.val (*exno*) END ;
-          td[tdw-fld.lev-1] := (t.mno*4000H + k) * 400H
+          td[tdw-fld.lev-1] := (t.mno*10000H + fld.val (*mthadr/exno*)) * 400H
         END ;
         fld := fld.next
       END ;
