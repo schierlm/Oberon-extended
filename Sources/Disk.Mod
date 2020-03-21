@@ -81,6 +81,17 @@ MODULE Disk;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 12.12.20 Extended Ober
     FOR i := 5 TO mapsize DIV 32 - 1 DO sectorMap[i] := {} END   (*mark blocks 160-65536 (=64K-160 blocks) as unallocated*)
   END InitSecMap;
 
+  PROCEDURE LastUsedSector*(): INTEGER;
+  VAR i, j, secno: INTEGER;
+  BEGIN
+    i := mapsize DIV 32 - 1;
+    WHILE sectorMap[i] = {} DO DEC(i) END;
+    FOR j := 0 TO 31 DO
+      IF j IN sectorMap[i] THEN secno := i * 32 + j END;
+    END;
+  RETURN secno * 29
+  END LastUsedSector;
+
   PROCEDURE MarkSector*(sec: INTEGER);
   BEGIN sec := sec DIV 29; ASSERT(SYSTEM.H(0) = 0);
     INCL(sectorMap[sec DIV 32], sec MOD 32); INC(NofSectors)
@@ -112,6 +123,22 @@ MODULE Disk;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 12.12.20 Extended Ober
     dst := dst * 2 + FSoffset;
     WriteSD(dst, SYSTEM.ADR(src)); WriteSD(dst+1, SYSTEM.ADR(src)+512)
   END PutSector;
+
+  PROCEDURE TrimAllSectorsAfter*(sec: INTEGER);
+  VAR i: INTEGER; magicSector: ARRAY 512 OF BYTE;
+  BEGIN sec := sec DIV 29; ASSERT(SYSTEM.H(0) = 0);
+    sec := sec * 2 + FSoffset + 2;
+    magicSector[0] := ORD("!"); magicSector[504] := ORD("!");
+    magicSector[1] := ORD("!"); magicSector[505] := ORD("!");
+    magicSector[2] := ORD("T"); magicSector[506] := ORD("T");
+    magicSector[3] := ORD("R"); magicSector[507] := ORD("R");
+    magicSector[4] := ORD("I"); magicSector[508] := ORD("I");
+    magicSector[5] := ORD("M"); magicSector[509] := ORD("M");
+    magicSector[6] := ORD("!"); magicSector[510] := ORD("!");
+    magicSector[7] := ORD("!"); magicSector[511] := ORD("!");
+    FOR i := 8 TO 503 DO magicSector[i] := ORD("-") END;
+    WriteSD(sec, SYSTEM.ADR(magicSector));
+  END TrimAllSectorsAfter;
 
   PROCEDURE Init*;
   BEGIN InitSecMap
