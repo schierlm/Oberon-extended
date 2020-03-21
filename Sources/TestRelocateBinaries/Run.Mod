@@ -1,5 +1,5 @@
 MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 14.3.20 Extended Oberon*)
-  IMPORT SYSTEM, Files, Modules, Texts, Oberon, ORL;
+  IMPORT SYSTEM, Files, Texts, Oberon, ORL;
   CONST maxCode = 8000;
 
   VAR code: ARRAY maxCode OF LONGINT;
@@ -32,7 +32,7 @@ MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 1
       Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n); (*strings*)
       Files.ReadInt(R, n); Files.Set(R, F, Files.Pos(R) + n); (*type descriptors*)
       Files.ReadInt(R, len);
-      IF len > LEN(code) THEN res := Modules.nospace
+      IF len > LEN(code) THEN res := ORL.nospace
       ELSE n := 0;
         WHILE n < len DO Files.ReadInt(R, data); code[n] := data; INC(n) END ; (*code*)
         Files.ReadString(R, name);
@@ -46,15 +46,15 @@ MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 1
         Files.ReadInt(R, data); (*fixorgT*) Files.ReadInt(R, data); (*fixorgM*)
         Files.ReadInt(R, entry);
         Files.Read(R, ch);
-        IF ch # "O" THEN res := Modules.badfile ELSE res := Modules.noerr END
+        IF ch # "O" THEN res := ORL.badfile ELSE res := ORL.noerr END
       END
-    ELSE res := Modules.nofile
+    ELSE res := ORL.nofile
     END
   END Extract;
 
   PROCEDURE RunRsc*;  (*extract, load and execute code section of standalone program  M.rsc*)
     VAR len, entry, res: INTEGER;
-      body: Modules.Command;
+      body: ORL.Command;
       F: Files.File;
       S: Texts.Scanner;
   BEGIN GetArg(S); Texts.WriteString(W, "Run.RunRsc ");
@@ -62,7 +62,7 @@ MODULE Run;  (*Run standalone programs M.rsc or pre-linked binaries M.bin / AP 1
       Texts.WriteString(W, S.s); Texts.Append(Oberon.Log, W.buf);
       Extract(S.s, code, len, entry, res);  (*extract code section from M.rsc*)
       IF res = ORL.noerr THEN Texts.WriteString(W, " done");
-        body := SYSTEM.VAL(Modules.Command, SYSTEM.ADR(code) + entry); body
+        body := SYSTEM.VAL(ORL.Command, SYSTEM.ADR(code) + entry); body
       ELSIF res = ORL.nofile THEN Texts.WriteString(W, " failed")
       ELSIF res = ORL.badfile THEN Texts.WriteString(W, " input file format error")
       ELSIF res = ORL.nospace THEN Texts.WriteString(W, " program too long")

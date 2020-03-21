@@ -1,9 +1,7 @@
 MODULE M1;
   IMPORT SYSTEM, M0;
   CONST C1* = 11;  (*11 decimal = B hexadecimal*)
-  VAR i0, i1: INTEGER;
-BEGIN
-  i0 := M0.C0; SYSTEM.PUT(8, i0)   (*10 decimal = A hexadecimal*)
+BEGIN SYSTEM.PUT(8, M0.C0)   (*10 decimal = A hexadecimal*)
 END M1.
 
 ORP.Compile Run.Mod/s M0.Mod/s M1.Mod/s ~
