@@ -14,12 +14,10 @@ MODULE M3;  (*no asterisk after the keyword MODULE*)
   BEGIN END Method31;
 
   PROCEDURE Do*;
-  BEGIN
-    i0 := M0.C0 + 2; SYSTEM.PUT(16, i0);  (*12 decimal = C hexadecimal*)
+  BEGIN i0 := M0.C0 + 2; SYSTEM.PUT(16, i0);  (*12 decimal = C hexadecimal*)
     i1 := M1.C1 + 2; SYSTEM.PUT(20, i1);  (*13 decimal = D hexadecimal*)
     i2 := M2.C2 + 2; SYSTEM.PUT(24, i2)   (*14 decimal = E hexadecimal*)
   END Do;
-
 BEGIN Do
 END M3.
 
@@ -30,7 +28,7 @@ ORL.Relocate M3.bin M4.bin 1024 ~  # relocate the pre-linked binary to destadr =
 Run.RunRsc M1.rsc ~   # see the source file M1.Mod
 Tools.Inspect 0 ~     # yields this output:  .... .... 0000000A .... ....
 
-ORL.Execute M3.bin ~  # will automatically relocate from destadr 0 to the actual location  
-ORL.Execute M4.bin ~  # will automatically relocate from destadr 1024 to the actual location  
+ORL.Execute M3.bin ~  # will automatically relocate the binary from destadr 0 to its actual memory location
+ORL.Execute M4.bin ~  # will automatically relocate the binary from destadr 1024 to its actual memory location
 Tools.Inspect 0 ~     # yields this output:  ... ... ... ... 0000000C 0000000D 0000000E ...
 

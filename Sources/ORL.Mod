@@ -2,11 +2,11 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, Files, Modules, Texts, Oberon;
   CONST versionkey = 1X; versionkey0 = 0X; DescSize = 92; MnLength = 32;
     noerr* = 0; nofile* = 1; badversion* = 2; badkey* = 3; badfile* = 4; nospace* = 5;
-    BootStartSec = 2; StartAdr = 8; MemAdr = 12; AllocAdr = 16; RootAdr = 20; StackAdr = 24; FPrintAdr = 28; ModOrg = 32;
+    BootSec = 2; DestAdr = 8; MemAdr = 12; AllocAdr = 16; RootAdr = 20; StackAdr = 24; FPrintAdr = 28; ModOrg = 32;
     U = 20000000H; V = 10000000H; B = 100000H;  (*modifier bits*)
     MOV = 40000000H; IOR = 40060000H;  (*F1 register instructions*)
     F2 = -2;  (*F2 memory instruction*)
-    BC = 0E7000000H; BL = 0F7000000H;  (*F3 branch instructions*)
+    F3 = -1; BC = 0E7000000H; BL = 0F7000000H;  (*F3 branch instructions*)
     C4 = 10H; C6 = 40H; C8 = 100H; C10 = 400H; C12 = 1000H; C14 = 4000H; C16 = 10000H; C18 = 40000H;
     C20 = 100000H; C22 = 400000H; C24 = 1000000H; C26 = 4000000H; C28 = 10000000H; C30 = 40000000H;
 
@@ -257,7 +257,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         END ;
         SYSTEM.GET(Start, x);  (*address of initialization body of the top module relative to Start*)
         SYSTEM.PUT(Start, BC + (x DIV 4) - 1);  (*branch instruction to the initialization body of the top module*)
-        SYSTEM.PUT(Start + StartAdr, 0);  (*target address of the beginning of the linked binary*)
+        SYSTEM.PUT(Start + DestAdr, 0);  (*destination address for execution of the pre-linked binary*)
         SYSTEM.PUT(Start + MemAdr, Kernel.MemLim);  (*limit of available memory, typically overwritten by the boot loader*)
         SYSTEM.PUT(Start + AllocAdr, AllocPtr - Start);  (*address of the end of the module space loaded*)
         SYSTEM.PUT(Start + RootAdr, SYSTEM.VAL(INTEGER, root) - Start);  (*current root of the links of loaded modules*)
@@ -290,7 +290,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
     IF S.class = Texts.Name THEN
       Texts.WriteString(W, "  loading "); Texts.WriteString(W, S.s); F := Files.Old(S.s);
       IF F # NIL THEN Texts.WriteString(W, " onto boot area"); Texts.WriteInt(W, Files.Length(F), 7);
-        secno := BootStartSec; i := 0; Files.Set(R, F, 0); Files.ReadByte(R, b);
+        secno := BootSec; i := 0; Files.Set(R, F, 0); Files.ReadByte(R, b);
         WHILE ~R.eof DO buf[i] := b; INC(i);
           IF i = Kernel.SectorLength THEN Kernel.PutSector(secno*29, buf); INC(secno); i := 0 END ;
           Files.ReadByte(R, b)
@@ -306,10 +306,10 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END Load;
 
-  PROCEDURE RelocateBin*(start, dst: INTEGER);  (*relocate pre-linked binary loaded at Mem[start]*)
+  PROCEDURE RelocateLoaded*(start, dst: INTEGER);  (*relocate pre-linked binary loaded at Mem[start] for execution at dst*)
     VAR src, p, i, j, x, y, im: INTEGER;
       M: Module;
-  BEGIN SYSTEM.GET(start + StartAdr, src); SYSTEM.PUT(start + StartAdr, dst); SYSTEM.GET(start + RootAdr, p);
+  BEGIN SYSTEM.GET(start + DestAdr, src); SYSTEM.PUT(start + DestAdr, dst); SYSTEM.GET(start + RootAdr, p);
     p := p + start; dst := dst - src; start := start - src;
     WHILE p # 0 DO (*fixup*)
       M := SYSTEM.VAL(Module, p); p := SYSTEM.VAL(INTEGER, M.next);
@@ -354,9 +354,9 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
       M.ptr := M.ptr + dst;
       M.pvr := M.pvr + dst
     END
-  END RelocateBin;
+  END RelocateLoaded;
 
-  PROCEDURE Relocate*;  (*relocate pre-linked binary M.bin and write result to output file*)
+  PROCEDURE Relocate*;  (*relocate pre-linked binary M.bin for execution at destadr and write result to output file R.bin*)
     VAR start, i, filelen, destadr, res: INTEGER; b: BYTE;
       name, name1: ARRAY 32 OF CHAR;
       F: Files.File; R: Files.Rider;
@@ -372,7 +372,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
               IF filelen > 0 THEN
                 Files.Set(R, F, 0); Files.ReadByte(R, b); start := Modules.AllocPtr; i := start;
                 WHILE ~R.eof DO SYSTEM.PUT(i, b); INC(i); Files.ReadByte(R, b) END ;
-                RelocateBin(start, destadr);
+                RelocateLoaded(start, destadr);
                 F := Files.New(name1); Files.Set(R, F, 0); i := start;
                 WHILE i < start + filelen DO SYSTEM.GET(i, b); Files.WriteByte(R, b); INC(i) END ;
                 Files.Register(F); Texts.WriteInt(W, Files.Length(F), 7)
@@ -385,7 +385,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         END
       END
     END ;
-    IF res = -1 THEN Texts.WriteString(W, "Usage: ORL.Relocate M.bin N.bin destadr") END ;
+    IF res = -1 THEN Texts.WriteString(W, "Usage: ORL.Relocate M.bin R.bin destadr") END ;
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END Relocate;
 
@@ -402,7 +402,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         IF Modules.AllocPtr + Files.Length(F) < limit THEN
           Files.Set(R, F, 0); Files.ReadByte(R, b); start := Modules.AllocPtr; i := start;
           WHILE ~R.eof DO SYSTEM.PUT(i, b); INC(i); Files.ReadByte(R, b) END ;
-          RelocateBin(start, start); Texts.WriteString(W, " at address ");
+          RelocateLoaded(start, start); Texts.WriteString(W, " at address ");
           Texts.WriteInt(W, start, 7); Texts.WriteInt(W, i - start, 7);
           body := SYSTEM.VAL(Command, start); body  (*branch to initialization body of top module*)
         ELSE Texts.WriteString(W, " insufficient space")
