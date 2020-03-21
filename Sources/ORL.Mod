@@ -257,7 +257,7 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
         END ;
         SYSTEM.GET(Start, x);  (*address of initialization body of the top module relative to Start*)
         SYSTEM.PUT(Start, BC + (x DIV 4) - 1);  (*branch instruction to the initialization body of the top module*)
-        SYSTEM.PUT(Start + DestAdr, 0);  (*destination address for execution of the pre-linked binary*)
+        SYSTEM.PUT(Start + DestAdr, 0);  (*destination address of the pre-linked binary*)
         SYSTEM.PUT(Start + MemAdr, Kernel.MemLim);  (*limit of available memory, typically overwritten by the boot loader*)
         SYSTEM.PUT(Start + AllocAdr, AllocPtr - Start);  (*address of the end of the module space loaded*)
         SYSTEM.PUT(Start + RootAdr, SYSTEM.VAL(INTEGER, root) - Start);  (*current root of the links of loaded modules*)
