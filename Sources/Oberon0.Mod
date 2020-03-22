@@ -1,4 +1,4 @@
-MODULE Oberon0; (*Oberon-0 command interpreter / AP 13.3.20 Extended Oberon*)
+MODULE Oberon0; (*Oberon-0 command interpreter / AP 22.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, FileDir, Files, Modules, RS232, PCLink0;
   CONST swi = -60; (*switches*)
     stat = -52; (*RS-232*)
@@ -106,7 +106,7 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 13.3.20 Extended Oberon*)
   END ShowCommands;
 
   PROCEDURE List(name: FileDir.FileName; adr: LONGINT; VAR cont: BOOLEAN);
-    VAR i0, i, j0, j: INTEGER; hp: FileDir.FileHeader;
+    VAR i0, i, j0, j, length, date: INTEGER;
   BEGIN i := 0;
     WHILE (pat[i] > "*") & (pat[i] = name[i]) DO INC(i) END ;
     IF (pat[i] = 0X) & (name[i] = 0X) THEN i0 := i; j0 := i
@@ -125,9 +125,8 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 13.3.20 Extended Oberon*)
     IF (name[i0] = 0X) & (pat[j0] = 0X) THEN (*found*)
       RS232.Line; RS232.SendStr(name);
       IF pat[j0+1] = "!" THEN (*option*)
-        Kernel.GetSector(adr, hp); RS232.SendStr("  ");
-        RS232.SendInt(hp.aleng*FileDir.SectorSize + hp.bleng - FileDir.HeaderSize); (*length*)
-        RS232.SendStr("  "); RS232.SendHex(adr)
+        FileDir.Attributes(adr, length, date);
+        RS232.SendStr("  "); RS232.SendInt(length); RS232.SendStr("  "); RS232.SendHex(adr)
       END
     END
   END List;
