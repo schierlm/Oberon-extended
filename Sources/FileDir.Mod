@@ -1,5 +1,5 @@
-MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
-  IMPORT Kernel;
+MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20 Extended Oberon*)
+  IMPORT Disk;
 
   (*File Directory is a B-tree with its root page at DirRootAdr.
     Each entry contains a file name and the disk address of the file's head sector*)
@@ -58,7 +58,7 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
     VAR i, L, R: INTEGER; dadr: DiskAdr;
       a: DirPage;
   BEGIN dadr := DirRootAdr; A := 0;
-    REPEAT Kernel.GetSector(dadr, a); ASSERT(a.mark = DirMark);
+    REPEAT Disk.GetSector(dadr, a); ASSERT(a.mark = DirMark);
       L := 0; R := a.m; (*binary search*)
       WHILE L < R DO
         i := (L+R) DIV 2;
@@ -83,14 +83,14 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
       u: DirEntry;
       a: DirPage;
 
-  BEGIN (*~h*) Kernel.GetSector(dpg0, a); ASSERT(a.mark = DirMark);
+  BEGIN (*~h*) Disk.GetSector(dpg0, a); ASSERT(a.mark = DirMark);
     L := 0; R := a.m; (*binary search*)
     WHILE L < R DO
       i := (L+R) DIV 2;
       IF name <= a.e[i].name THEN R := i ELSE L := i+1 END
     END ;
     IF (R < a.m) & (name = a.e[R].name) THEN
-      a.e[R].adr := fad; Kernel.PutSector(dpg0, a)  (*replace*)
+      a.e[R].adr := fad; Disk.PutSector(dpg0, a)  (*replace*)
     ELSE (*not on this page*)
       IF R = 0 THEN dpg1 := a.p0 ELSE dpg1 := a.e[R-1].p END ;
       IF dpg1 = 0 THEN (*not in tree, insert*)
@@ -111,12 +111,12 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
           IF R < N THEN (*insert in left half*)
             v := a.e[N-1]; i := N-1;
             WHILE i > R DO DEC(i); a.e[i+1] := a.e[i] END ;
-            a.e[R] := u; Kernel.PutSector(dpg0, a);
-            Kernel.AllocSector(dpg0, dpg0); i := 0;
+            a.e[R] := u; Disk.PutSector(dpg0, a);
+            Disk.AllocSector(dpg0, dpg0); i := 0;
             WHILE i < N DO a.e[i] := a.e[i+N]; INC(i) END
           ELSE (*insert in right half*)
-            Kernel.PutSector(dpg0, a);
-            Kernel.AllocSector(dpg0, dpg0); DEC(R, N); i := 0;
+            Disk.PutSector(dpg0, a);
+            Disk.AllocSector(dpg0, dpg0); DEC(R, N); i := 0;
             IF R = 0 THEN v := u
             ELSE v := a.e[N];
               WHILE i < R-1 DO a.e[i] := a.e[N+1+i]; INC(i) END ;
@@ -126,7 +126,7 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
           END ;
           a.p0 := v.p; v.p := dpg0
         END ;
-        Kernel.PutSector(dpg0, a)
+        Disk.PutSector(dpg0, a)
       END
     END
   END insert;
@@ -138,10 +138,10 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
   BEGIN h := FALSE;
     insert(name, DirRootAdr, h, U, fad);
     IF h THEN (*root overflow*)
-      Kernel.GetSector(DirRootAdr, a); ASSERT(a.mark = DirMark);
-      Kernel.AllocSector(DirRootAdr, oldroot); Kernel.PutSector(oldroot, a);
+      Disk.GetSector(DirRootAdr, a); ASSERT(a.mark = DirMark);
+      Disk.AllocSector(DirRootAdr, oldroot); Disk.PutSector(oldroot, a);
       a.mark := DirMark; a.m := 1; a.p0 := oldroot; a.e[0] := U;
-      Kernel.PutSector(DirRootAdr, a)
+      Disk.PutSector(DirRootAdr, a)
     END
   END Insert;
 
@@ -152,10 +152,10 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
     VAR i, k: INTEGER;
         dpg1: DiskAdr;
         a, b: DirPage;  (*a := underflowing page, b := neighbouring page*)
-  BEGIN Kernel.GetSector(dpg0, a); ASSERT(a.mark = DirMark);
+  BEGIN Disk.GetSector(dpg0, a); ASSERT(a.mark = DirMark);
     (*h & a.m = N-1 & dpg0 = c.e[s-1].p*)
     IF s < c.m THEN (*b := page to the right of a*)
-      dpg1 := c.e[s].p; Kernel.GetSector(dpg1, b); ASSERT(b.mark = DirMark);
+      dpg1 := c.e[s].p; Disk.GetSector(dpg1, b); ASSERT(b.mark = DirMark);
       k := (b.m-N+1) DIV 2; (*k = no. of items available on page b*)
       a.e[N-1] := c.e[s]; a.e[N-1].p := b.p0;
       IF k > 0 THEN
@@ -164,17 +164,17 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
         c.e[s] := b.e[i]; b.p0 := c.e[s].p;
         c.e[s].p := dpg1; b.m := b.m - k; i := 0;
         WHILE i < b.m DO b.e[i] := b.e[i+k]; INC(i) END ;
-        Kernel.PutSector(dpg1, b); a.m := N-1+k; h := FALSE
+        Disk.PutSector(dpg1, b); a.m := N-1+k; h := FALSE
       ELSE (*merge pages a and b, discard b*) i := 0;
         WHILE i < N DO a.e[i+N] := b.e[i]; INC(i) END ;
         i := s; DEC(c.m);
         WHILE i < c.m DO c.e[i] := c.e[i+1]; INC(i) END ;
         a.m := 2*N; h := c.m < N
       END ;
-      Kernel.PutSector(dpg0, a)
+      Disk.PutSector(dpg0, a)
     ELSE (*b := page to the left of a*) DEC(s);
       IF s = 0 THEN dpg1 := c.p0 ELSE dpg1 := c.e[s-1].p END ;
-      Kernel.GetSector(dpg1, b); ASSERT(b.mark = DirMark);
+      Disk.GetSector(dpg1, b); ASSERT(b.mark = DirMark);
       k := (b.m-N+1) DIV 2; (*k = no. of items available on page b*)
       IF k > 0 THEN
         i := N-1;
@@ -184,13 +184,13 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
         WHILE i > 0 DO DEC(i); a.e[i] := b.e[i+b.m+1] END ;
         c.e[s] := b.e[b.m]; a.p0 := c.e[s].p;
         c.e[s].p := dpg0; a.m := N-1+k; h := FALSE;
-        Kernel.PutSector(dpg0, a)
+        Disk.PutSector(dpg0, a)
       ELSE (*merge pages a and b, discard a*)
         c.e[s].p := a.p0; b.e[N] := c.e[s]; i := 0;
         WHILE i < N-1 DO b.e[i+N+1] := a.e[i]; INC(i) END ;
         b.m := 2*N; DEC(c.m); h := c.m < N
       END ;
-      Kernel.PutSector(dpg1, b)
+      Disk.PutSector(dpg1, b)
     END
   END underflow;
 
@@ -208,16 +208,16 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
     PROCEDURE del(VAR a: DirPage; R: INTEGER; dpg1: DiskAdr; VAR h: BOOLEAN);
       VAR dpg2: DiskAdr;  (*global: a, R*)
           b: DirPage;
-    BEGIN Kernel.GetSector(dpg1, b); ASSERT(b.mark = DirMark); dpg2 := b.e[b.m-1].p;
+    BEGIN Disk.GetSector(dpg1, b); ASSERT(b.mark = DirMark); dpg2 := b.e[b.m-1].p;
       IF dpg2 # 0 THEN del(a, R, dpg2, h);
-        IF h THEN underflow(b, dpg2, b.m, h); Kernel.PutSector(dpg1, b) END
+        IF h THEN underflow(b, dpg2, b.m, h); Disk.PutSector(dpg1, b) END
       ELSE
         b.e[b.m-1].p := a.e[R].p; a.e[R] := b.e[b.m-1];
-        DEC(b.m); h := b.m < N; Kernel.PutSector(dpg1, b)
+        DEC(b.m); h := b.m < N; Disk.PutSector(dpg1, b)
       END
     END del;
 
-  BEGIN (*~h*) Kernel.GetSector(dpg0, a); ASSERT(a.mark = DirMark);
+  BEGIN (*~h*) Disk.GetSector(dpg0, a); ASSERT(a.mark = DirMark);
     L := 0; R := a.m; (*binary search*)
     WHILE L < R DO
       i := (L+R) DIV 2;
@@ -232,10 +232,10 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
       ELSE del(a, R, dpg1, h);
         IF h THEN underflow(a, dpg1, R, h) END
       END ;
-      Kernel.PutSector(dpg0, a)
+      Disk.PutSector(dpg0, a)
     ELSIF dpg1 # 0 THEN
       delete(name, dpg1, h, fad);
-      IF h THEN underflow(a, dpg1, R, h); Kernel.PutSector(dpg0, a) END
+      IF h THEN underflow(a, dpg1, R, h); Disk.PutSector(dpg0, a) END
     ELSE (*not in tree*) fad := 0
     END
   END delete;
@@ -246,10 +246,10 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
   BEGIN h := FALSE;
     delete(name, DirRootAdr, h, fad);
     IF h THEN (*root underflow*)
-      Kernel.GetSector(DirRootAdr, a); ASSERT(a.mark = DirMark);
+      Disk.GetSector(DirRootAdr, a); ASSERT(a.mark = DirMark);
       IF (a.m = 0) & (a.p0 # 0) THEN
-        newroot := a.p0; Kernel.GetSector(newroot, a); ASSERT(a.mark = DirMark);
-        Kernel.PutSector(DirRootAdr, a) (*discard newroot*)
+        newroot := a.p0; Disk.GetSector(newroot, a); ASSERT(a.mark = DirMark);
+        Disk.PutSector(DirRootAdr, a) (*discard newroot*)
       END
     END
   END Delete;
@@ -260,7 +260,7 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
                       VAR continue: BOOLEAN);
     VAR i, j: INTEGER; pfx, nmx: CHAR;
       dpg1: DiskAdr; a: DirPage;
-  BEGIN Kernel.GetSector(dpg, a); ASSERT(a.mark = DirMark); i := 0;
+  BEGIN Disk.GetSector(dpg, a); ASSERT(a.mark = DirMark); i := 0;
     WHILE (i < a.m) & continue DO
       j := 0;
       REPEAT pfx := prefix[j]; nmx := a.e[i].name[j]; INC(j)
@@ -287,7 +287,7 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
 
   PROCEDURE Attributes*(fad: INTEGER; VAR length, date: INTEGER);
     VAR hd: FileHeader;
-  BEGIN Kernel.GetSector(fad, hd); length := hd.aleng * SectorSize + hd.bleng - HeaderSize; date := hd.date;
+  BEGIN Disk.GetSector(fad, hd); length := hd.aleng * SectorSize + hd.bleng - HeaderSize; date := hd.date;
   END Attributes;
 
   (* ----- initialization ----- *)
@@ -317,17 +317,17 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
         DEC(R); x := A[0]; A[0] := A[R]; A[R] := x; sift(A, L, R)
       END ;
       WHILE L < k DO
-        Kernel.GetSector(A[L], hd); ASSERT(hd.mark = HeaderMark);
+        Disk.GetSector(A[L], hd); ASSERT(hd.mark = HeaderMark);
         IF hd.aleng < SecTabSize THEN j := hd.aleng + 1;
-          REPEAT DEC(j); Kernel.MarkSector(hd.sec[j]) UNTIL j = 0
+          REPEAT DEC(j); Disk.MarkSector(hd.sec[j]) UNTIL j = 0
         ELSE j := SecTabSize;
-          REPEAT DEC(j); Kernel.MarkSector(hd.sec[j]) UNTIL j = 0;
+          REPEAT DEC(j); Disk.MarkSector(hd.sec[j]) UNTIL j = 0;
           n := (hd.aleng - SecTabSize) DIV 256; i := 0;
           WHILE i <= n DO
-            Kernel.MarkSector(hd.ext[i]);
-            Kernel.GetSector(hd.ext[i], B); (*index sector*)
+            Disk.MarkSector(hd.ext[i]);
+            Disk.GetSector(hd.ext[i], B); (*index sector*)
             IF i < n THEN j := 256 ELSE j := (hd.aleng - SecTabSize) MOD 256 + 1 END ;
-            REPEAT DEC(j); Kernel.MarkSector(B[j]) UNTIL j = 0;
+            REPEAT DEC(j); Disk.MarkSector(B[j]) UNTIL j = 0;
             INC(i)
           END
         END ;
@@ -337,7 +337,7 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
 
     PROCEDURE TraverseDir(VAR A: ARRAY OF DiskAdr; VAR k: INTEGER; dpg: DiskAdr);
       VAR i: INTEGER; a: DirPage;
-    BEGIN Kernel.GetSector(dpg, a); ASSERT(a.mark = DirMark); Kernel.MarkSector(dpg); i := 0;
+    BEGIN Disk.GetSector(dpg, a); ASSERT(a.mark = DirMark); Disk.MarkSector(dpg); i := 0;
       WHILE i < a.m DO
         A[k] := a.e[i].adr; INC(k); INC(i);
         IF k = 2000 THEN MarkSectors(A, k); k := 0 END

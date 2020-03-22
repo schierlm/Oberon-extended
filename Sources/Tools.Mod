@@ -1,5 +1,5 @@
-MODULE Tools;   (*NW 22.2.14 / AP 9.3.20 Extended Oberon*)
-  IMPORT SYSTEM, Kernel, Files, Modules, Input, Texts, Viewers, Oberon, MenuViewers, TextFrames;
+MODULE Tools;   (*NW 22.2.14 / AP 22.3.20 Extended Oberon*)
+  IMPORT SYSTEM, Kernel, Disk, Files, Modules, Input, Texts, Viewers, Oberon, MenuViewers, TextFrames;
 
   CONST StandardMenu = "Tools.Close System.Copy System.Grow Edit.Search Edit.Store | System.Expand System.Spread System.Clone";
     BS = Input.BS; TAB = Input.TAB; LF = Input.LF; CR = Input.CR; DEL = Input.DEL;
@@ -56,7 +56,7 @@ MODULE Tools;   (*NW 22.2.14 / AP 9.3.20 Extended Oberon*)
     IF S.class = Texts.Int THEN
       secno := S.i; Texts.Scan(S);
       IF S.class = Texts.Int THEN n := S.i ELSE n := 8 END ;
-      Kernel.GetSector(secno*29, buf); Texts.WriteString(W, "Sector "); Texts.WriteInt(W, S.i, 4);
+      Disk.GetSector(secno*29, buf); Texts.WriteString(W, "Sector "); Texts.WriteInt(W, S.i, 4);
       k := 0;
       REPEAT DEC(n); m := 8; Texts.WriteLn(W); Texts.WriteHex(W, k*4); Texts.Write(W, TAB);
         REPEAT Texts.WriteHex(W, buf[k]); INC(k); DEC(m) UNTIL m = 0;

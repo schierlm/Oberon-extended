@@ -1,5 +1,5 @@
 MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 22.3.20 Extended Oberon*)
-  IMPORT SYSTEM, Kernel, FileDir, Files, Modules,
+  IMPORT SYSTEM, Kernel, Disk, FileDir, Files, Modules,
     Input, Display, Viewers, Fonts, Texts, Oberon, MenuViewers, TextFrames;
 
   CONST Version* = "Extended Oberon System  AP 22.3.20";
@@ -605,8 +605,8 @@ MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 22.3.20 Extended O
     Texts.WriteInt(W, Modules.AllocPtr * 100 DIV Kernel.heapOrg, 4); Texts.Write(W, "%"); EndLine;
     Texts.WriteString(W, "  Heap speace"); Texts.WriteInt(W, Kernel.allocated, 8);
     Texts.WriteInt(W, Kernel.allocated * 100 DIV (Kernel.heapLim - Kernel.heapOrg), 4); Texts.Write(W, "%"); EndLine;
-    Texts.WriteString(W, "  Disk sectors "); Texts.WriteInt(W, Kernel.NofSectors, 4);
-    Texts.WriteInt(W, Kernel.NofSectors * 100 DIV 10000H, 4); Texts.Write(W, "%"); EndLine;
+    Texts.WriteString(W, "  Disk sectors "); Texts.WriteInt(W, Disk.NofSectors, 4);
+    Texts.WriteInt(W, Disk.NofSectors * 100 DIV 10000H, 4); Texts.Write(W, "%"); EndLine;
     Texts.WriteString(W, "  Tasks"); Texts.WriteInt(W, Oberon.NofTasks, 4); EndLine
   END Watch;
 

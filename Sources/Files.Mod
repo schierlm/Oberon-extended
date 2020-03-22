@@ -1,5 +1,5 @@
-MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
-  IMPORT SYSTEM, Kernel, FileDir;
+MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013 / AP 22.3.20 Extended Oberon*)
+  IMPORT SYSTEM, Kernel, Disk, FileDir;
 
   (*A file consists of a sequence of pages. The first page
     contains the header. Part of the header is the page table, an array
@@ -93,7 +93,7 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
         IF f = NIL THEN (*file not yet present*)
           NEW(buf); buf.apos := 0; buf.next := buf; buf.mod := FALSE;
           F := SYSTEM.VAL(FileDir.FileHd, SYSTEM.ADR(buf.data));
-          Kernel.GetSector(header, buf.data); ASSERT(F.mark = FileDir.HeaderMark);
+          Disk.GetSector(header, buf.data); ASSERT(F.mark = FileDir.HeaderMark);
           NEW(f); f.aleng := F.aleng; f.bleng := F.bleng; f.date := F.date;
           IF f.aleng = 0 THEN buf.lim := f.bleng ELSE buf.lim := SS END ;
           f.firstbuf := buf; f.nofbufs := 1; f.name := namebuf; f.registered := TRUE;
@@ -101,7 +101,7 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
           k := (f.aleng + (XS-STS)) DIV XS; i := 0;
           WHILE i < k DO
             NEW(inxpg); inxpg.adr := F.ext[i]; inxpg.mod := FALSE;
-            Kernel.GetSector(inxpg.adr, inxpg.sec); f.ext[i] := inxpg; INC(i)
+            Disk.GetSector(inxpg.adr, inxpg.sec); f.ext[i] := inxpg; INC(i)
           END ;
           WHILE i < FileDir.ExTabSize DO f.ext[i] := NIL; INC(i) END ;
           f.sechint := header; f.modH := FALSE; f.next := root; root := SYSTEM.VAL(INTEGER, f)
@@ -148,7 +148,7 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
     IF pos < STS THEN sec := f.sec[pos]
     ELSE sec := f.ext[(pos-STS) DIV XS].sec[(pos-STS) MOD XS]
     END ;
-    Kernel.GetSector(sec, buf.data);
+    Disk.GetSector(sec, buf.data);
     IF pos < f.aleng THEN buf.lim := SS ELSE buf.lim := f.bleng END ;
     buf.apos := pos; buf.mod := FALSE
   END ReadBuf;
@@ -160,7 +160,7 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
     IF buf.apos < STS THEN
       secadr := f.sec[buf.apos];
       IF secadr = 0 THEN
-        Kernel.AllocSector(f.sechint, secadr);
+        Disk.AllocSector(f.sechint, secadr);
         f.modH := TRUE; f.sec[buf.apos] := secadr; f.sechint := secadr
       END ;
       IF buf.apos = 0 THEN
@@ -172,11 +172,11 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
       END ;
       k := (buf.apos - STS) MOD XS; secadr := inx.sec[k];
       IF secadr = 0 THEN
-        Kernel.AllocSector(f.sechint, secadr);
+        Disk.AllocSector(f.sechint, secadr);
         f.modH := TRUE; inx.mod := TRUE; inx.sec[k] := secadr; f.sechint := secadr
       END
     END ;
-    Kernel.PutSector(secadr, buf.data); buf.mod := FALSE
+    Disk.PutSector(secadr, buf.data); buf.mod := FALSE
   END WriteBuf;
 
   PROCEDURE Buf(f: File; pos: INTEGER): Buffer;
@@ -217,14 +217,14 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
       inx := f.ext[i]; INC(i);
       IF inx.mod THEN
         IF inx.adr = 0 THEN
-          Kernel.AllocSector(f.sechint, inx.adr); f.sechint := inx.adr; f.modH := TRUE
+          Disk.AllocSector(f.sechint, inx.adr); f.sechint := inx.adr; f.modH := TRUE
         END ;
-        Kernel.PutSector(inx.adr, inx.sec); inx.mod := FALSE
+        Disk.PutSector(inx.adr, inx.sec); inx.mod := FALSE
       END
     END ;
     IF f.modH THEN
-      Kernel.GetSector(f.sec[0], head); UpdateHeader(f, head);
-      Kernel.PutSector(f.sec[0], head); f.modH := FALSE
+      Disk.GetSector(f.sec[0], head); UpdateHeader(f, head);
+      Disk.PutSector(f.sec[0], head); f.modH := FALSE
     END
   END Unbuffer;
 
@@ -251,12 +251,12 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
       IF a <= STS THEN i := a;
       ELSE i := STS; DEC(a, i); j := (a-1) MOD XS; k := (a-1) DIV XS;
         WHILE k >= 0 DO
-          Kernel.GetSector(f.ext[k].adr, ind);
-          REPEAT DEC(j); Kernel.FreeSector(ind[j]) UNTIL j = 0;
-          Kernel.FreeSector(f.ext[k].adr); j := XS; DEC(k)
+          Disk.GetSector(f.ext[k].adr, ind);
+          REPEAT DEC(j); Disk.FreeSector(ind[j]) UNTIL j = 0;
+          Disk.FreeSector(f.ext[k].adr); j := XS; DEC(k)
         END
       END ;
-      REPEAT DEC(i); Kernel.FreeSector(f.sec[i]) UNTIL i = 0
+      REPEAT DEC(i); Disk.FreeSector(f.sec[i]) UNTIL i = 0
     END
   END Purge;
 
@@ -281,7 +281,7 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
         FileDir.Delete(oldbuf, adr);
         IF adr # 0 THEN
           FileDir.Insert(newbuf, adr);
-          Kernel.GetSector(adr, head); head.name := newbuf; Kernel.PutSector(adr, head)
+          Disk.GetSector(adr, head); head.name := newbuf; Disk.PutSector(adr, head)
         ELSE res := 2
         END
       END
@@ -480,7 +480,7 @@ MODULE Files;  (*NW 11.1.86 / 22.9.93 / 25.5.95 / 25.12.95 / 15.8.2013*)
   (*---------------------------System use---------------------------*)
 
   PROCEDURE Init*;
-  BEGIN root := 0; Kernel.Init; FileDir.Init
+  BEGIN root := 0; Kernel.Init; Disk.Init; FileDir.Init
   END Init;
 
   PROCEDURE RestoreList*; (*after mark phase of garbage collection*)

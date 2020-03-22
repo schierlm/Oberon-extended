@@ -1,5 +1,5 @@
-MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
-  IMPORT SYSTEM, Kernel, Files, Modules, Texts, Oberon;
+MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 22.3.20 Extended Oberon*)
+  IMPORT SYSTEM, Kernel, Disk, Files, Modules, Texts, Oberon;
   CONST versionkey = 1X; versionkey0 = 0X; DescSize = 92; MnLength = 32;
     noerr* = 0; nofile* = 1; badversion* = 2; badkey* = 3; badfile* = 4; nospace* = 5;
     BootSec = 2; DestAdr = 8; MemAdr = 12; AllocAdr = 16; RootAdr = 20; StackAdr = 24; FPrintAdr = 28; ModOrg = 32;
@@ -285,19 +285,19 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
     VAR i, secno: LONGINT; b: BYTE;
       F: Files.File; R: Files.Rider;
       S: Texts.Scanner;
-      buf: ARRAY Kernel.SectorLength OF BYTE;
+      buf: ARRAY Disk.SectorLength OF BYTE;
   BEGIN Texts.OpenScanner(S, Oberon.Par.text, Oberon.Par.pos); Texts.Scan(S);
     IF S.class = Texts.Name THEN
       Texts.WriteString(W, "  loading "); Texts.WriteString(W, S.s); F := Files.Old(S.s);
       IF F # NIL THEN Texts.WriteString(W, " onto boot area"); Texts.WriteInt(W, Files.Length(F), 7);
         secno := BootSec; i := 0; Files.Set(R, F, 0); Files.ReadByte(R, b);
         WHILE ~R.eof DO buf[i] := b; INC(i);
-          IF i = Kernel.SectorLength THEN Kernel.PutSector(secno*29, buf); INC(secno); i := 0 END ;
+          IF i = Disk.SectorLength THEN Disk.PutSector(secno*29, buf); INC(secno); i := 0 END ;
           Files.ReadByte(R, b)
         END ;
         IF i > 0 THEN
-          WHILE i < Kernel.SectorLength DO buf[i] := 0; INC(i) END ;
-          Kernel.PutSector(secno*29, buf)
+          WHILE i < Disk.SectorLength DO buf[i] := 0; INC(i) END ;
+          Disk.PutSector(secno*29, buf)
         END
       ELSE Texts.WriteString(W, " not found")
       END
@@ -413,6 +413,6 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 14.3.20 Extended Oberon*)
     END
   END Execute;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR Boot linker/loader  AP 14.3.20");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR Boot linker/loader  AP 22.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf); limit := Kernel.stackOrg - Kernel.stackSize
 END ORL.

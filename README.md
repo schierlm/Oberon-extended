@@ -20,6 +20,7 @@ Behind the scenes
 * Module loader resolves all references to external procedures and global module data at load/link time - an access to an external object is no different than an access to a non-imported global object
 * Freely relocatable and executable pre-linked binaries M.bin using ORL.Relocate and ORL.Execute
 * Possibility to generate pre-linked boot-loaders consisting of multiple modules using ORL.Link
+* Module Disk is a separate module (independent from Kernel)
 
 **REVISION:** 22.3.2020
 
@@ -83,6 +84,13 @@ If you just follow the compilation sequence shown in *System.Tool*, you should b
 
      ORP.Compile ORS.Mod/s ORB.Mod/s ~
      ORP.Compile ORG.Mod/s ORP.Mod/s ~
+
+Temporarily compile module Disk.Mod with the "old" compiler on the "old" system, so it can be used by the cross-linker ORL on the "old" system (this works, because module ORL only uses procedures Disk.GetSecotr and Disk.PutSector, but does not modify any global variables of module Disk or Kernel). Module Disk will be recompiled with the "new" compiler (and for the "new" system) in step 5 below.
+
+     ORP.Compile Disk.Mod/s ~
+
+Compile the remaining modules of the cross-development toolchain
+
      ORP.Compile ORL.Mod/s ORX.Mod/s ORTool.Mod/s ~
      System.Free ORTool ORP ORG ORB ORS ORL ORX ~
 
@@ -90,9 +98,15 @@ If you just follow the compilation sequence shown in *System.Tool*, you should b
 
 **STEP 4:** Use the cross-development toolchain on your FPGA Oberon system to build Extended Oberon
 
+First, load the temporary version of ORL (using module Disk compiled for the "old" system).
+
+     ORL.Link nonexistingmodulename ~   # load the "old" version of module Disk into memory, so module Disk can be safely re-compiled below
+
+This step is absolutely necessary! Otherwise the next command below (*ORP.Compile Kernel.Mod/s Disk.Mod/s ...*) would create a "new" version of module *Disk* (i.e. a version that is compiled for Extended Oberon), before the command *ORL.Link* gets a chance to load the "old" version into memory.
+
 Compile the *inner core* of Extended Oberon and load it onto the boot area of the local disk:
 
-     ORP.Compile Kernel.Mod/s FileDir.Mod/s Files.Mod/s Modules.Mod/s ~    # modules for the "regular" boot file for Extended Oberon
+     ORP.Compile Kernel.Mod/s Disk.Mod/s FileDir.Mod/s Files.Mod/s Modules.Mod/s ~    # modules for the "regular" boot file for Extended Oberon
      ORL.Link Modules ~                                                    # generate a pre-linked binary file of the "regular" boot file (Modules.bin)
      ORL.Load Modules.bin ~                                                # load the "regular" boot file onto the boot area of the local disk
 
@@ -105,16 +119,18 @@ Compile the remaining modules of Extended Oberon:
      ORP.Compile MenuViewers.Mod/s TextFrames.Mod/s ~
      ORP.Compile System.Mod/s Edit.Mod/s Tools.Mod/s ~
 
-Re-compile the Oberon compiler itself before (!) restarting the system:
+------------------------------------------------------
+
+**STEP 5:** Re-compile the Oberon compiler itself before (!) restarting the system:
 
      ORP.Compile ORS.Mod/s ORB.Mod/s ~
      ORP.Compile ORG.Mod/s ORP.Mod/s ~
      ORP.Compile ORL.Mod/s ORX.Mod/s ORTool.Mod/s ~
 
-The last step is necessary because Extended Oberon uses a different Oberon object file format (the currently loaded Extended Oberon compiler runs under FPGA Oberon, but wouldn't be able to run under Extended Oberon).
+This step is necessary because Extended Oberon uses a different Oberon object file format (the currently loaded Extended Oberon compiler runs under FPGA Oberon, but wouldn't be able to run under Extended Oberon).
 
 ------------------------------------------------------
 
-**STEP 5:** Restart the Oberon system
+**STEP 6:** Restart the Oberon system
 
 You are now running Extended Oberon. Re-compile any other modules that you may have on your system.

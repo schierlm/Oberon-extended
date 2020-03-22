@@ -33,7 +33,7 @@ ORP.Compile ORG.Mod/s ORP.Mod/s ~
 ORP.Compile ORL.Mod/s ORX.Mod/s ORTool.Mod/s ~
 System.Free ORTool ORP ORG ORB ORS ORL ORX ~
 
-ORP.Compile Kernel.Mod/s FileDir.Mod/s Files.Mod/s Modules.Mod/s ~
+ORP.Compile Kernel.Mod/s Disk.Mod/s FileDir.Mod/s Files.Mod/s Modules.Mod/s ~
 ORL.Link Modules ~            # generate a regular boot file
 ORL.Load Modules.bin ~     # load the boot file onto the boot area
 

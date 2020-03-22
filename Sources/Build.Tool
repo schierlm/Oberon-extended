@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------------------------------------------------
 #  1. Compile the modules needed for Oberon system building
 # ---------------------------------------------------------------------------------------------------------------------
-ORP.Compile Kernel.Mod FileDir.Mod Files.Mod Modules.Mod ~      # modules for the "regular" boot file
+ORP.Compile Kernel.Mod Disk.Mod FileDir.Mod Files.Mod Modules.Mod ~      # modules for the "regular" boot file
 ORP.Compile RS232.Mod PCLink0.Mod Oberon0.Mod ~    # additional modules for the "build-up" boot file
 ORP.Compile ORC.Mod/s Oberon0Tool.Mod/s ~     # partner program ORC and Oberon0 tool module
 ORP.Compile BootLoad.Mod/s ~        # the regular Oberon boot loader
@@ -53,9 +53,9 @@ ORC.Load System1.bin ~                     # load the ENTIRE Oberon system over 
 #  6. Load an ENTIRE Oberon system in a single boot file to a target system AND configure an ENLARGED boot area there
 #     (restart the target system over the data link, then execute the following commands on the host system)
 # ---------------------------------------------------------------------------------------------------------------------
-ORP.Compile Kernel1.Mod/s System1.Mod/s ~                # compile the files needed to include an ENTIRE Oberon system in a single boot file
+ORP.Compile Disk1.Mod/s System1.Mod/s ~                  # compile the files needed to include an ENTIRE Oberon system in a single boot file
 ORL.Link System1 ~                                       # generate a boot file containing the ENTIRE Oberon system (System1.bin)
-ORL.Link Modules ~                                       # (optional) generate a REGULAR boot file (Modules.bin, with Kernel built from Kernel1.Mod)
+ORL.Link Modules ~                                       # (optional) generate a REGULAR boot file (Modules.bin, with Disk built from Disk1.Mod)
 ORC.Load System1.bin ~                                   # load the ENTIRE Oberon system over the data link to the target system AND start it
 ORC.SR 101 ~                                             # clear the file directory on the target system
 ORC.Send System1.bin Oberon10.Scn.Fnt System.Tool
@@ -78,7 +78,7 @@ ORC.SR 102 BootLoadDisk.rsc ~   # reboot the target system from its local disk (
 
 #
 # IMPORTANT: Please re-build the entire Oberon system and the Oberon compiler on the host system (see System.Tool),
-#            as object files (Kernel) and binaries (Modules.bin) have been overwritten by the commands above!
+#            as object files (Disk.rsc) and binaries (Modules.bin) have been overwritten by the commands above!
 #
 
 # ---------------------------------------------------------------------------------------------------------------------

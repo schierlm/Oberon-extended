@@ -1,5 +1,5 @@
 MODULE Oberon0; (*Oberon-0 command interpreter / AP 22.3.20 Extended Oberon*)
-  IMPORT SYSTEM, Kernel, FileDir, Files, Modules, RS232, PCLink0;
+  IMPORT SYSTEM, Kernel, Disk, FileDir, Files, Modules, RS232, PCLink0;
   CONST swi = -60; (*switches*)
     stat = -52; (*RS-232*)
     REQ = 20H; REC = 21H; SND = 22H; ACK = 10H;
@@ -33,7 +33,7 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 22.3.20 Extended Oberon*)
     VAR k, m, n, secno: INTEGER;
       buf: ARRAY 256 OF INTEGER;
   BEGIN RS232.RecInt(secno); RS232.SendStr("Sector"); n := 32;
-    Kernel.GetSector(secno*29, buf); k := 0;
+    Disk.GetSector(secno*29, buf); k := 0;
     REPEAT DEC(n); m := 8; RS232.Line; RS232.SendHex(k*4); RS232.SendStr("  ");
       REPEAT RS232.SendHex(buf[k]); INC(k); DEC(m) UNTIL m = 0
     UNTIL n = 0
@@ -63,8 +63,8 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 22.3.20 Extended Oberon*)
     RS232.SendInt(Modules.AllocPtr * 100 DIV Kernel.heapOrg); RS232.SendStr("%"); RS232.Line;
     RS232.SendStr("  Heap speace"); RS232.SendInt(Kernel.allocated);
     RS232.SendInt(Kernel.allocated * 100 DIV (Kernel.heapLim - Kernel.heapOrg)); RS232.SendStr("%"); RS232.Line;
-    RS232.SendStr("  Disk sectors "); RS232.SendInt(Kernel.NofSectors);
-    RS232.SendInt(Kernel.NofSectors * 100 DIV 10000H); RS232.SendStr("%"); RS232.Line;
+    RS232.SendStr("  Disk sectors "); RS232.SendInt(Disk.NofSectors);
+    RS232.SendInt(Disk.NofSectors * 100 DIV 10000H); RS232.SendStr("%"); RS232.Line;
     RS232.SendStr("  Switches: swi0 = "); SYSTEM.GET(swi, s); RS232.Send(5);
     IF SYSTEM.BIT(swi, 0) THEN RS232.Send(ORD("0")) ELSE RS232.Send(ORD("1")) END ;
     RS232.SendStr(",  swi1 = "); RS232.Send(5);
@@ -204,36 +204,36 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 22.3.20 Extended Oberon*)
     VAR k, m, n, secno: INTEGER;
       buf: ARRAY 256 OF INTEGER;
   BEGIN RS232.RecInt(secno); RS232.RecInt(n);
-    Kernel.GetSector(secno*29, buf); k := 0;
+    Disk.GetSector(secno*29, buf); k := 0;
     WHILE k < n DO RS232.RecInt(m); buf[k] := m; INC(k) END ;
-    RS232.SendStr("WriteSector"); Kernel.PutSector(secno*29, buf)
+    RS232.SendStr("WriteSector"); Disk.PutSector(secno*29, buf)
   END WriteSector;
 
   PROCEDURE ClearSector; (*secno, n - clear sector (n words)*)
     VAR k, n, secno: INTEGER;
       buf: ARRAY 256 OF INTEGER;
   BEGIN RS232.RecInt(secno); RS232.RecInt(n); RS232.SendStr("ClearSector");
-    Kernel.GetSector(secno*29, buf); k := 0;
+    Disk.GetSector(secno*29, buf); k := 0;
     WHILE k < n DO buf[k] := 0; INC(k) END ;
-    Kernel.PutSector(secno*29, buf)
+    Disk.PutSector(secno*29, buf)
   END ClearSector;
 
   PROCEDURE LoadBoot; (*filename - load boot file onto the boot area of the local disk, starting at sector 2*)
     VAR i, secno: INTEGER; b: BYTE;
       F: Files.File; R: Files.Rider;
-      buf: ARRAY Kernel.SectorLength OF BYTE;
+      buf: ARRAY Disk.SectorLength OF BYTE;
       name: ARRAY 32 OF CHAR;
   BEGIN RS232.RecStr(name); RS232.SendStr("LoadBoot  ");
     F := Files.Old(name);
     IF F # NIL THEN RS232.SendInt(Files.Length(F)); (*success*)
       secno := 2; i := 0; Files.Set(R, F, 0); Files.ReadByte(R, b);
       WHILE ~R.eof DO buf[i] := b; INC(i);
-        IF i = Kernel.SectorLength THEN Kernel.PutSector(secno*29, buf); INC(secno); i := 0 END ;
+        IF i = Disk.SectorLength THEN Disk.PutSector(secno*29, buf); INC(secno); i := 0 END ;
         Files.ReadByte(R, b)
       END ;
       IF i > 0 THEN
-        WHILE i < Kernel.SectorLength DO buf[i] := 0; INC(i) END ;
-        Kernel.PutSector(secno*29, buf)
+        WHILE i < Disk.SectorLength DO buf[i] := 0; INC(i) END ;
+        Disk.PutSector(secno*29, buf)
       END
     ELSE RS232.SendInt(-1) (*file not found*)
     END
@@ -246,7 +246,7 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 22.3.20 Extended Oberon*)
     a.mark := FileDir.DirMark; a.m := 0; a.p0 := 0; u.adr := 0; u.p := 0;
     FOR i := 0 TO FileDir.FnLength-1 DO u.name[i] := 0X END ;
     FOR i := 0 TO FileDir.DirPgSize-1 DO a.e[i] := u END ;
-    Kernel.PutSector(FileDir.DirRootAdr, a)
+    Disk.PutSector(FileDir.DirRootAdr, a)
   END ClearDirectory;
 
   PROCEDURE ExtractCode(F: Files.File; VAR code: ARRAY OF LONGINT; VAR codelen, entry, res: INTEGER);
@@ -346,10 +346,10 @@ MODULE Oberon0; (*Oberon-0 command interpreter / AP 22.3.20 Extended Oberon*)
   PROCEDURE Init*; (*establish a working file system (root page) if necessary*)
     VAR a: FileDir.DirPage;
   BEGIN SYSTEM.LDREG(TR, Kernel.TrapAdr);
-    Kernel.GetSector(FileDir.DirRootAdr, a);
+    Disk.GetSector(FileDir.DirRootAdr, a);
     IF a.mark # FileDir.DirMark THEN
       a.mark := FileDir.DirMark; a.m := 0; a.p0 := 0;
-      Kernel.PutSector(FileDir.DirRootAdr, a)
+      Disk.PutSector(FileDir.DirRootAdr, a)
     END
   END Init;
 
