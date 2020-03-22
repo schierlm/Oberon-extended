@@ -85,11 +85,11 @@ If you just follow the compilation sequence shown in *System.Tool*, you should b
      ORP.Compile ORS.Mod/s ORB.Mod/s ~
      ORP.Compile ORG.Mod/s ORP.Mod/s ~
 
-Temporarily compile module Disk.Mod with the "old" compiler on the "old" system, so it can be used by the cross-linker ORL on the "old" system (this works, because module ORL only uses procedures Disk.GetSector and Disk.PutSector). Module *Disk* will be recompiled with the "new" compiler (and for the "new" system) in step 5 below.
+Temporarily compile module *Disk* with the "old" compiler on the "old" system, so it can be used by the cross-linker *ORL* on the "old" system (this works, because module *ORL* only uses procedures *GetSector* and *PutSector*, but does not access or modify any global variables of *Disk*). Module *Disk* will be recompiled with the "new" compiler (and for the "new" system) in step 5 below.
 
      ORP.Compile Disk.Mod/s ~
 
-Compile the remaining modules of the cross-development toolchain (here, *ORL* uses a version of *Disk* for the "old" system!):
+Compile the remaining modules of the cross-development toolchain (where *ORL* uses a temporary version of *Disk*):
 
      ORP.Compile ORL.Mod/s ORX.Mod/s ORTool.Mod/s ~
      System.Free ORTool ORP ORG ORB ORS ORL ORX ~
