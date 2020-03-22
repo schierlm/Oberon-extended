@@ -85,11 +85,11 @@ If you just follow the compilation sequence shown in *System.Tool*, you should b
      ORP.Compile ORS.Mod/s ORB.Mod/s ~
      ORP.Compile ORG.Mod/s ORP.Mod/s ~
 
-Temporarily compile module Disk.Mod with the "old" compiler on the "old" system, so it can be used by the cross-linker ORL on the "old" system (this works, because module ORL only uses procedures Disk.GetSecotr and Disk.PutSector, but does not modify any global variables of module Disk or Kernel). Module Disk will be recompiled with the "new" compiler (and for the "new" system) in step 5 below.
+Temporarily compile module Disk.Mod with the "old" compiler on the "old" system, so it can be used by the cross-linker ORL on the "old" system (this works, because module ORL only uses procedures Disk.GetSector and Disk.PutSector). Module *Disk* will be recompiled with the "new" compiler (and for the "new" system) in step 5 below.
 
      ORP.Compile Disk.Mod/s ~
 
-Compile the remaining modules of the cross-development toolchain
+Compile the remaining modules of the cross-development toolchain (here, *ORL* uses a version of *Disk* for the "old" system!):
 
      ORP.Compile ORL.Mod/s ORX.Mod/s ORTool.Mod/s ~
      System.Free ORTool ORP ORG ORB ORS ORL ORX ~
@@ -98,7 +98,7 @@ Compile the remaining modules of the cross-development toolchain
 
 **STEP 4:** Use the cross-development toolchain on your FPGA Oberon system to build Extended Oberon
 
-First, load the temporary version of ORL (using module Disk compiled for the "old" system).
+First, load the temporary version of ORL (using module *Disk* compiled for the "old" system):
 
      ORL.Link nonexistingmodulename ~   # load the "old" version of module Disk into memory, so module Disk can be safely re-compiled below
 
@@ -111,6 +111,10 @@ Compile the *inner core* of Extended Oberon and load it onto the boot area of th
      ORL.Load Modules.bin ~                                                # load the "regular" boot file onto the boot area of the local disk
 
 This step is possible, because module *ORL* is written such that it can be executed on both the FPGA Oberon and the Extended Oberon system. It produces output using the Extended Oberon module and object file format.
+
+Release the temporary versions of modules *ORL* and *Disk* (compiled for the "old" system), as they are no longer needed:
+
+     System.Free ORL Disk ~
 
 Compile the remaining modules of Extended Oberon:
 
