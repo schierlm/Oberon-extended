@@ -86,7 +86,7 @@ If you just follow the compilation sequence shown in *System.Tool*, you should b
      ORP.Compile ORL.Mod/s ~
      System.Free ORTool ORP ORG ORB ORS ORL ORX ~
 
-Note: Don't recompile modules ORX and ORTool just yet (if you do, you'll just see an error messages). These modules can be compiled only after rebooting under Extended Oberon.
+Note: Don't recompile modules ORX and ORTool just yet (if you do, you'll just see an error message). These modules can be compiled only after rebooting under Extended Oberon.
 
 ------------------------------------------------------
 
