@@ -1,6 +1,7 @@
-MODULE ORX;  (*Oberon boot converter for RISC / AP 14.3.20 Extended Oberon*)
-  IMPORT Files, Modules, Input, Texts, Oberon;
-  CONST CR = Input.CR;
+MODULE ORX;  (*Oberon boot converter for RISC / AP 22.3.20 Extended Oberon*)
+  IMPORT Files, Texts, Oberon;
+  CONST CR = 0DX; noerr = 0; badfile = 4;  (*copied from Modules for use as cross development tool*)
+
   TYPE Writer = PROCEDURE(VAR R: Files.Rider; x: LONGINT);
 
   VAR W: Texts.Writer;
@@ -41,7 +42,7 @@ MODULE ORX;  (*Oberon boot converter for RISC / AP 14.3.20 Extended Oberon*)
     Files.ReadInt(R, data); (*fixorgT*) Files.ReadInt(R, data); (*fixorgM*)
     Files.ReadInt(R, entry);
     Files.Read(R, ch);
-    IF ch # "O" THEN res := Modules.badfile ELSE res := Modules.noerr END
+    IF ch # "O" THEN res := badfile ELSE res := noerr END
   END OutCode;
 
   PROCEDURE WriteFile*;  (*write code section of M.rsc in hex format to output file*)
@@ -56,12 +57,12 @@ MODULE ORX;  (*Oberon boot converter for RISC / AP 14.3.20 Extended Oberon*)
         f := Files.Old(name);
         IF f # NIL THEN g := Files.New(S.s); Files.Set(Rf, f, 0); Files.Set(Rg, g, 0);
           OutCode(Rf, Rg, WriteHex, codelen, entry, res);
-          IF res = Modules.noerr THEN
+          IF res = noerr THEN
             filelen := ((codelen DIV 512) + 1) * 512; n := codelen;
             WHILE n < filelen DO WriteHex(Rg, 0); INC(n) END ; (*zero-fill*)
             Texts.WriteInt(W, codelen*4, 6); Texts.WriteInt(W, entry, 6);
             Texts.WriteString(W, "  done"); Files.Register(g)
-          ELSIF res = Modules.badfile THEN Texts.WriteString(W, "  input file format error")
+          ELSIF res = badfile THEN Texts.WriteString(W, "  input file format error")
           END
         ELSE Texts.WriteString(W, "  input file not found")
         END
@@ -84,11 +85,11 @@ MODULE ORX;  (*Oberon boot converter for RISC / AP 14.3.20 Extended Oberon*)
         IF f # NIL THEN g := Files.New(S.s); Files.Set(Rf, f, 0); Files.Set(Rg, g, 0);
           Files.WriteInt(Rg, 0); Files.WriteInt(Rg, 0); (*placeholder for prefix to be inserted at the end*)
           OutCode(Rf, Rg, Files.WriteInt, codelen, entry, res);
-          IF res = Modules.noerr THEN
+          IF res = noerr THEN
             Files.Set(Rg, g, 0); Files.WriteInt(Rg, codelen*4); Files.WriteInt(Rg, entry); (*insert prefix*)
             Texts.WriteInt(W, codelen*4, 6); Texts.WriteInt(W, entry, 6);
             Texts.WriteString(W, "  done"); Files.Register(g)
-          ELSIF res = Modules.badfile THEN Texts.WriteString(W, "  input file format error")
+          ELSIF res = badfile THEN Texts.WriteString(W, "  input file format error")
           END
         ELSE Texts.WriteString(W, "  input file not found")
         END
@@ -144,6 +145,6 @@ MODULE ORX;  (*Oberon boot converter for RISC / AP 14.3.20 Extended Oberon*)
     Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
   END WriteStream;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR boot converter  AP 14.3.20");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "OR boot converter  AP 22.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
 END ORX.

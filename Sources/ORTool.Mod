@@ -1,6 +1,6 @@
-MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 13.3.20 Extended Oberon*)
-  IMPORT SYSTEM, Files, Modules, Input, Texts, Oberon, ORB;
-  CONST TAB = Input.TAB;
+MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 22.3.20 Extended Oberon*)
+  IMPORT SYSTEM, Files, Modules, Texts, Oberon, ORB;
+  CONST TAB = 09X;  (*copied from Input for use as cross development tool*)
   VAR W: Texts.Writer;
     mnemo0, mnemo1: ARRAY 16, 4 OF CHAR;  (*mnemonics*)
 
@@ -285,7 +285,7 @@ MODULE ORTool;  (*NW 18.2.2013 / 12.4.2017 / AP 13.3.20 Extended Oberon*)
      END
   END DecMod;
 
-BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "ORTool 18.2.2013 / AP 13.3.20");
+BEGIN Texts.OpenWriter(W); Texts.WriteString(W, "ORTool 18.2.2013 / AP 22.3.20");
   Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf);
   mnemo0[0] := "MOV";
   mnemo0[1] := "LSL";
