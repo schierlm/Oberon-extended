@@ -323,9 +323,9 @@ MODULE ORL;  (*Oberon boot linker/loader for RISC / AP 22.3.20 Extended Oberon*)
           INC(i, 4)
         END ;
         SYSTEM.GET(i, x);
-        WHILE x # -1 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointer references*)
+        WHILE x # -1 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*pointer offsets*)
         INC(i, 4); SYSTEM.GET(i, x);
-        WHILE x # -1 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable references*)
+        WHILE x # -1 DO SYSTEM.PUT(i, x + dst); INC(i, 4); SYSTEM.GET(i, x) END ;  (*procedure variable offsets*)
         INC(i, 4)
       END ;
       j := M.imp + start;
