@@ -1,6 +1,6 @@
 MODULE Disk;  (*module Disk for a boot file containing the entire Oberon system / AP 22.3.20 Extended Oberon*)
   IMPORT SYSTEM;
-  CONST SectorLength* = 1024; TrapAdr* = 04H;
+  CONST SectorLength* = 1024;
     spiData = -48; spiCtrl = -44;
     CARD0 = 1; SPIFAST = 4;
     FSoffset = 80000H; (*256MB in 512-byte blocks*)

@@ -1,6 +1,6 @@
 MODULE Disk;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 22.3.20 Extended Oberon*)
   IMPORT SYSTEM;
-  CONST SectorLength* = 1024; TrapAdr* = 04H;
+  CONST SectorLength* = 1024;
     spiData = -48; spiCtrl = -44;
     CARD0 = 1; SPIFAST = 4;
     FSoffset = 80000H; (*256MB in 512-byte blocks*)
