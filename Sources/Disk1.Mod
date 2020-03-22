@@ -12,8 +12,6 @@ MODULE Disk;  (*module Disk for a boot file containing the entire Oberon system 
     data: INTEGER; (*SPI data in*)
     sectorMap: ARRAY mapsize DIV 32 OF SET;
 
-(* ---------- Disk storage management ----------*)
-
   PROCEDURE SPIIdle(n: INTEGER); (*send n FFs slowly with no card selected*)
   BEGIN SYSTEM.PUT(spiCtrl, 0);
     WHILE n > 0 DO DEC(n); SYSTEM.PUT(spiData, -1);

@@ -12,8 +12,6 @@ MODULE Disk;  (*NW/PR  11.4.86 / 27.12.95 / 4.2.2014 / AP 22.3.20 Extended Obero
     data: INTEGER; (*SPI data in*)
     sectorMap: ARRAY mapsize DIV 32 OF SET;
 
-(* ---------- Disk storage management ----------*)
-
   PROCEDURE SPIIdle(n: INTEGER); (*send n FFs slowly with no card selected*)
   BEGIN SYSTEM.PUT(spiCtrl, 0);
     WHILE n > 0 DO DEC(n); SYSTEM.PUT(spiData, -1);
