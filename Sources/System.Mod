@@ -1,8 +1,8 @@
-MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 17.3.20 Extended Oberon*)
+MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 22.3.20 Extended Oberon*)
   IMPORT SYSTEM, Kernel, FileDir, Files, Modules,
     Input, Display, Viewers, Fonts, Texts, Oberon, MenuViewers, TextFrames;
 
-  CONST Version* = "Extended Oberon System  AP 17.3.20";
+  CONST Version* = "Extended Oberon System  AP 22.3.20";
     StandardMenu = "System.Close System.Copy System.Grow Edit.Search Edit.Store | System.Expand System.Spread System.Clone";
     LogMenu = "Edit.Locate Edit.Search System.Copy System.Grow System.Clear | System.Expand System.Spread System.Clone";
     SystemLog = "System.Log"; SystemTool = "System.Tool";
@@ -476,7 +476,7 @@ MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 17.3.20 Extended O
   (* ------------- Toolbox of file system ---------------*)
 
   PROCEDURE List(name: FileDir.FileName; adr: LONGINT; VAR cont: BOOLEAN);
-    VAR i0, i, j0, j: INTEGER; hp: FileDir.FileHeader;
+    VAR i0, i, j0, j, length, date: INTEGER;
   BEGIN i := 0;
     WHILE (pat[i] > "*") & (pat[i] = name[i]) DO INC(i) END ;
     IF (pat[i] = 0X) & (name[i] = 0X) THEN i0 := i; j0 := i
@@ -495,10 +495,8 @@ MODULE System; (*JG 3.10.90 / NW 12.10.93 / NW 20.6.2016 / AP 17.3.20 Extended O
     IF (name[i0] = 0X) & (pat[j0] = 0X) THEN (*found*)
       Texts.WriteString(W, name);
       IF pat[j0+1] = "!" THEN (*option*)
-        Kernel.GetSector(adr, hp);
-        Texts.Write(W, TAB); Texts.WriteClock(W, hp.date);
-        Texts.WriteInt(W, hp.aleng*FileDir.SectorSize + hp.bleng - FileDir.HeaderSize, 8); (*length*)
-        Texts.WriteHex(W, adr)
+        FileDir.Attributes(adr, length, date);
+        Texts.Write(W, TAB); Texts.WriteClock(W, date); Texts.WriteInt(W, length, 8); Texts.WriteHex(W, adr)
       END ;
       Texts.WriteLn(W)
     END

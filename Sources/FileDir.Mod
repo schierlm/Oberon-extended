@@ -1,4 +1,4 @@
-MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013*)
+MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013 / AP 22.3.20*)
   IMPORT Kernel;
 
   (*File Directory is a B-tree with its root page at DirRootAdr.
@@ -145,7 +145,6 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013*)
     END
   END Insert;
 
-
   PROCEDURE underflow(VAR c: DirPage;  (*ancestor page*)
                       dpg0:  DiskAdr;
                       s:     INTEGER;  (*insertion point in c*)
@@ -286,9 +285,14 @@ MODULE FileDir;   (*NW 12.1.86 / 23.8.90 / 15.8.2013*)
   BEGIN b := TRUE; enumerate(prefix, DirRootAdr, proc, b)
   END Enumerate;
 
-(* ----- initialization ----- *)
+  PROCEDURE Attributes*(fad: INTEGER; VAR date, length: INTEGER);
+    VAR hd: FileHeader;
+  BEGIN Kernel.GetSector(fad, hd); date := hd.date; length := hd.aleng * SectorSize + hd.bleng - HeaderSize
+  END Attributes;
 
-PROCEDURE Init*;
+  (* ----- initialization ----- *)
+
+  PROCEDURE Init*;
     VAR k: INTEGER;
         A: ARRAY 2000 OF DiskAdr;
 

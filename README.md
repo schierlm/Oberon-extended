@@ -21,7 +21,7 @@ Behind the scenes
 * Freely relocatable and executable pre-linked binaries M.bin using ORL.Relocate and ORL.Execute
 * Possibility to generate pre-linked boot-loaders consisting of multiple modules using ORL.Link
 
-**REVISION:** 17.3.2020
+**REVISION:** 22.3.2020
 
 **DOCUMENTATION**
 
