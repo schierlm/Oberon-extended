@@ -15,7 +15,7 @@ MODULE MenuViewers; (*JG 26.8.90 / 16.9.93 / NW 10.3.13 / AP 12.2.20 Extended Ob
   PROCEDURE Restore (V: Viewer);
     VAR Menu, Main: Display.Frame;
   BEGIN Menu := V.dsc; Main := V.dsc.next;
-    Oberon.RemoveMarks(V.X, V.Y, V.W, V.H); Draw(V, V.Y, V.H, Display.white);
+    Oberon.RemoveMarks(V.X, V.Y, V.W, V.H); Draw(V, V.Y, V.H, Display.FrameColor);
     IF V.H > V.menuH + 1 THEN
       Main.X := V.X + 1; Main.Y := V.Y + 1; Main.W := V.W - 2; Main.H := V.H - V.menuH - 1;
       Menu.X := V.X + 1; Menu.Y := V.Y + V.H - V.menuH; Menu.W := V.W - 2; Menu.H := V.menuH - 1;
@@ -30,7 +30,7 @@ MODULE MenuViewers; (*JG 26.8.90 / 16.9.93 / NW 10.3.13 / AP 12.2.20 Extended Ob
   PROCEDURE Modify (V: Viewer; Y, H: INTEGER);
     VAR Menu, Main: Display.Frame;
   BEGIN Menu := V.dsc; Main := V.dsc.next;
-    Oberon.RemoveMarks(V.X, V.Y, V.W, V.H); Draw(V, V.Y, V.H, Display.black);
+    Oberon.RemoveMarks(V.X, V.Y, V.W, V.H); Draw(V, V.Y, V.H, Display.BackgroundColor);
     IF H > V.menuH + 1 THEN
       IF Y + H > V.Y + V.H THEN
         Viewers.Adjust(Menu, Viewers.modify, Y + H - V.menuH, V.menuH - 1);
@@ -46,7 +46,7 @@ MODULE MenuViewers; (*JG 26.8.90 / 16.9.93 / NW 10.3.13 / AP 12.2.20 Extended Ob
       Viewers.Adjust(Main, Viewers.modify, Y + H - V.menuH, 0);
       Viewers.Adjust(Menu, Viewers.modify, Y + 1, H - 2)
     END ;
-    Draw(V, Y, H, Display.white)
+    Draw(V, Y, H, Display.FrameColor)
   END Modify;
 
   PROCEDURE Suspend (V: Viewer);

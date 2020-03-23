@@ -4,6 +4,11 @@ MODULE Display;  (*NW 5.11.2013 / 17.1.2019 / AP 15.9.20 Extended Oberon*)
   CONST black* = 0; white* = 1;  (*black = background*)
     replace* = 0; paint* = 1; invert* = 2;  (*modes*)
     base = 0E7F00H;  (*adr of 1024 x 768 pixel, monocolor display frame*)
+    TextColor* = white; FrameColor* = white; CursorColor* = white;
+    ScrollMarkColor* = white; ChangeMarkColor* = white; SelectionColor* = white;
+    MenuBackgroundColor* = white; ScrollBarColor* = white; UnderlineColor* = white;
+    BackgroundColor* = black; TextBackgroundColor* = black;
+    MixTextColors* = FALSE;
 
   TYPE Frame* = POINTER TO FrameDesc;
     FrameMsg* = RECORD END ;
