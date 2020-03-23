@@ -106,15 +106,15 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
       IF X < CL + 3 THEN X := CL + 4 ELSIF X > CL + DW - 4 THEN X := CL + DW - 4 END
     END ;
     IF Y < 6 THEN Y := 6 ELSIF Y > DH - 6 THEN Y := DH - 6 END;
-    Display.CopyPatternClipped(Display.white, Display.updown, X-4, Y-4, 0, 0, 0, 0, Display.invert)
+    Display.CopyPatternClipped(Display.CursorColor, Display.updown, X-4, Y-4, 0, 0, 0, 0, Display.invert)
   END FlipSM;
 
   PROCEDURE UpdateMark (F: Frame);  (*in scroll bar*)
     VAR h, oldH: INTEGER;
   BEGIN oldH := F.markH; h := Min(F.H - 2, 20); F.markH := Max(F.org * F.H DIV (F.text.len + 1), 1);
     IF (h > 0) & F.hasMark & (F.left >= barW) & (F.markH # oldH) THEN
-      Display.ReplConst(Display.white, F.X + 2, Max(F.Y + F.H - 1 - oldH - h, F.Y + 1), markW, h, Display.invert);
-      Display.ReplConst(Display.white, F.X + 2, Max(F.Y + F.H - 1 - F.markH - h, F.Y + 1), markW, h, Display.invert)
+      Display.ReplConst(Display.ScrollMarkColor, F.X + 2, Max(F.Y + F.H - 1 - oldH - h, F.Y + 1), markW, h, Display.invert);
+      Display.ReplConst(Display.ScrollMarkColor, F.X + 2, Max(F.Y + F.H - 1 - F.markH - h, F.Y + 1), markW, h, Display.invert)
     END
   END UpdateMark;
 
@@ -122,7 +122,7 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
     VAR h: INTEGER;
   BEGIN h := Min(F.H - 2, 20);
     IF (F.H > 0) & (F.left >= barW) & ((F.hasMark & ~on) OR (~F.hasMark & on)) THEN
-      Display.ReplConst(Display.white, F.X + 2, Max(F.Y + F.H - 1 - F.markH - h, F.Y + 1), markW, h, Display.invert)
+      Display.ReplConst(Display.ScrollMarkColor, F.X + 2, Max(F.Y + F.H - 1 - F.markH - h, F.Y + 1), markW, h, Display.invert)
     END;
     F.hasMark := on
   END Mark;
@@ -130,7 +130,7 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
   PROCEDURE SetChangeMark (F: Frame; on: BOOLEAN);  (*in corner*)
   BEGIN
     IF F.H > menuH THEN
-      IF on THEN Display.CopyPatternClipped(Display.white, Display.block, F.X+F.W-12, F.Y+F.H-12, 0, 0, 0, 0, Display.paint)
+      IF on THEN Display.CopyPatternClipped(Display.ChangeMarkColor, Display.block, F.X+F.W-12, F.Y+F.H-12, 0, 0, 0, 0, Display.paint)
       ELSE Display.ReplConst(F.col, F.X+F.W-12, F.Y+F.H-12, 8, 8, Display.replace)
       END
     END
@@ -172,7 +172,9 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
         IF y + h <= topY THEN top := 0 ELSIF y >= topY THEN top := h ELSE top := y + h - topY END;
         IF y >= botY THEN bot := 0 ELSIF y + h <= botY THEN bot := h ELSE bot := botY - y END;
         IF x + X + w <= NX THEN right := 0 ELSE right := x + X + w - NX END;
-        IF top + bot < h THEN Display.CopyPatternClipped(R.col, patadr, X + x, y, left, right, top, bot, Display.invert) END
+        IF top + bot < h THEN Display.CopyPatternClipped(R.col, patadr, X + x, y, left, right, top, bot, Display.invert);
+	  IF Display.MixTextColors & (R.col # 0) THEN Display.CopyPatternClipped(F.col, patadr, X + x, y, left, right, top, bot, Display.invert) END
+	END
       END;
       X := X + dx; INC(len); Texts.Read(R, nextCh)
     END;
@@ -198,7 +200,7 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
       org: LONGINT; curY, topY, botY: INTEGER;
   BEGIN Display.ReplConst(F.col, F.X, F.Y, F.W, F.H, Display.replace);
     IF F.left >= barW THEN
-      Display.ReplConst(Display.white, F.X + barW - 1, F.Y, 1, F.H, Display.invert)
+      Display.ReplConst(Display.ScrollBarColor, F.X + barW - 1, F.Y, 1, F.H, Display.invert)
     END;
     Validate(F.text, F.org);
     topY := F.Y + F.H - F.top; botY := F.Y + F.bot; L := F.trailer;
@@ -225,7 +227,7 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
       org: LONGINT; curY, topY, botY, botY0: INTEGER;
   BEGIN Display.ReplConst(F.col, F.X, newY, F.W, F.Y - newY, Display.replace);
     IF F.left >= barW THEN
-      Display.ReplConst(Display.white, F.X + barW - 1, newY, 1, F.Y - newY, Display.invert)
+      Display.ReplConst(Display.ScrollBarColor, F.X + barW - 1, newY, 1, F.Y - newY, Display.invert)
     END;
     topY := F.Y + F.H - F.top; botY0 := F.Y + F.bot;
     F.H := F.H + F.Y - newY; F.Y := newY; botY := F.Y + F.bot;
@@ -495,7 +497,7 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
   PROCEDURE FlipCaret (F: Frame);
   BEGIN
     IF (F.carloc.x < F.W) & (F.carloc.y >= 10) & (F.carloc.x + 12 < F.W) THEN
-      Display.CopyPatternClipped(Display.white, Display.hook, F.X + F.carloc.x, F.Y + F.carloc.y - 10, 0, 0, 0, 0, Display.invert)
+      Display.CopyPatternClipped(Display.CursorColor, Display.hook, F.X + F.carloc.x, F.Y + F.carloc.y - 10, 0, 0, 0, 0, Display.invert)
     END
   END FlipCaret;
 
@@ -533,16 +535,16 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
       IF L # F.trailer THEN
         IF beg.org < F.org THEN beg0.org := F.org; beg0.x := F.left ELSE beg0 := beg END;
         IF beg0.org = end.org THEN
-          ReplConst(Display.white, F, F.X + beg0.x, Y, end.x - beg0.x, L.lsp, Display.invert)
+          ReplConst(Display.SelectionColor, F, F.X + beg0.x, Y, end.x - beg0.x, L.lsp, Display.invert)
         ELSE
-          ReplConst(Display.white, F, F.X + beg0.x, Y, F.left + L.wid - beg0.x, L.lsp, Display.invert);
+          ReplConst(Display.SelectionColor, F, F.X + beg0.x, Y, F.left + L.wid - beg0.x, L.lsp, Display.invert);
           org := org + L.len; L := L.next; Y := Y - L.lsp;
           WHILE (L # F.trailer) & (org < end.org) DO
-            ReplConst(Display.white, F, F.X + F.left, Y, L.wid, L.lsp, Display.invert);
+            ReplConst(Display.SelectionColor, F, F.X + F.left, Y, L.wid, L.lsp, Display.invert);
             org := org + L.len; L := L.next; Y := Y - L.lsp
           END;
           IF (L # F.trailer) & (org = end.org) THEN
-            ReplConst(Display.white, F, F.X + F.left, Y, end.x - F.left, L.lsp, Display.invert)
+            ReplConst(Display.SelectionColor, F, F.X + F.left, Y, end.x - F.left, L.lsp, Display.invert)
           END
         END
       END
@@ -621,19 +623,19 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
   BEGIN
     IF F.trailer.next # F.trailer THEN
       LocateLine(F, Y - F.Y, old);
-      ReplConst(Display.white, F, F.X + F.left, F.Y + old.y - old.lin.dsr, old.lin.wid, 2, Display.invert);
+      ReplConst(Display.UnderlineColor, F, F.X + F.left, F.Y + old.y - old.lin.dsr, old.lin.wid, 2, Display.invert);
       keysum := {};
       REPEAT Input.Mouse(keys, X, Y);
         keysum := keysum + keys;
         Oberon.DrawMouse(ScrollMarker, X, Y);
         LocateLine(F, Y - F.Y, new);
         IF new.org # old.org THEN
-          ReplConst(Display.white, F, F.X + F.left, F.Y + old.y - old.lin.dsr, old.lin.wid, 2, Display.invert);
-          ReplConst(Display.white, F, F.X + F.left, F.Y + new.y - new.lin.dsr, new.lin.wid, 2, Display.invert);
+          ReplConst(Display.UnderlineColor, F, F.X + F.left, F.Y + old.y - old.lin.dsr, old.lin.wid, 2, Display.invert);
+          ReplConst(Display.UnderlineColor, F, F.X + F.left, F.Y + new.y - new.lin.dsr, new.lin.wid, 2, Display.invert);
           old := new
         END
       UNTIL keys = {};
-      ReplConst(Display.white, F, F.X + F.left, F.Y + new.y - new.lin.dsr, new.lin.wid, 2, Display.invert);
+      ReplConst(Display.UnderlineColor, F, F.X + F.left, F.Y + new.y - new.lin.dsr, new.lin.wid, 2, Display.invert);
       org := new.org
     ELSE org := 0
     END
@@ -644,19 +646,19 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
   BEGIN
     IF F.trailer.next # F.trailer THEN
       LocateString(F, X - F.X, Y - F.Y, old);
-      ReplConst(Display.white, F, F.X + old.x, F.Y + old.y - old.lin.dsr, old.dx, 2, Display.invert);
+      ReplConst(Display.UnderlineColor, F, F.X + old.x, F.Y + old.y - old.lin.dsr, old.dx, 2, Display.invert);
       keysum := {};
       REPEAT
         Input.Mouse(keys, X, Y); keysum := keysum + keys;
         Oberon.DrawMouseArrow(X, Y);
         LocateString(F, X - F.X, Y - F.Y, new);
         IF new.pos # old.pos THEN
-          ReplConst(Display.white, F, F.X + old.x, F.Y + old.y - old.lin.dsr, old.dx, 2, Display.invert);
-          ReplConst(Display.white, F, F.X + new.x, F.Y + new.y - new.lin.dsr, new.dx, 2, Display.invert);
+          ReplConst(Display.UnderlineColor, F, F.X + old.x, F.Y + old.y - old.lin.dsr, old.dx, 2, Display.invert);
+          ReplConst(Display.UnderlineColor, F, F.X + new.x, F.Y + new.y - new.lin.dsr, new.dx, 2, Display.invert);
           old := new
         END
       UNTIL keys = {};
-      ReplConst(Display.white, F, F.X + new.x, F.Y + new.y - new.lin.dsr, new.dx, 2, Display.invert);
+      ReplConst(Display.UnderlineColor, F, F.X + new.x, F.Y + new.y - new.lin.dsr, new.dx, 2, Display.invert);
       pos := new.pos
     ELSE pos := 0
     END
@@ -1074,13 +1076,13 @@ MODULE TextFrames; (*JG 8.10.90 / NW 16.11.2015 / AP 9.3.20 Extended Oberon*)
   PROCEDURE NewMenu* (name, commands: ARRAY OF CHAR): Frame;
     VAR F: Frame; T: Texts.Text;
   BEGIN NEW(F); T := Menu(name, commands);
-    Open(F, Handle, T, 0, Display.white, left DIV 4, 0, 0, 0, lsp); RETURN F
+    Open(F, Handle, T, 0, Display.MenuBackgroundColor, left DIV 4, 0, 0, 0, lsp); RETURN F
   END NewMenu;
 
   PROCEDURE NewText* (text: Texts.Text; pos: LONGINT): Frame;
     VAR F: Frame;
   BEGIN NEW(F);
-    Open(F, Handle, text, pos, Display.black, left, right, top, bot, lsp); RETURN F
+    Open(F, Handle, text, pos, Display.TextBackgroundColor, left, right, top, bot, lsp); RETURN F
   END NewText;
 
 BEGIN NEW(TBuf); NEW(DelBuf);

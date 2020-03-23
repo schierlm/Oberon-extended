@@ -110,7 +110,7 @@ MODULE Oberon; (*JG 6.9.90 / 23.9.93 / 13.8.94 / NW 14.4.2013 / 22.12.2015 / AP 
       IF X > CL + DW - 15 THEN X := CL + DW - 15 END
     END ;
     IF Y < 14 THEN Y := 14 ELSIF Y > DH THEN Y := DH END ;
-    Display.CopyPattern(Display.white, Display.arrow, X, Y - 14, Display.invert)
+    Display.CopyPattern(Display.CursorColor, Display.arrow, X, Y - 14, Display.invert)
   END FlipArrow;
      
   PROCEDURE FlipStar (X, Y: INTEGER);
@@ -121,7 +121,7 @@ MODULE Oberon; (*JG 6.9.90 / 23.9.93 / 13.8.94 / NW 14.4.2013 / 22.12.2015 / AP 
       IF X < CL + 7 THEN X := CL + 7 ELSIF X > CL + DW - 8 THEN X := CL + DW - 8 END
     END ;
     IF Y < 7 THEN Y := 7 ELSIF Y > DH - 8 THEN Y := DH - 8 END ;
-    Display.CopyPattern(Display.white, Display.star, X - 7, Y - 7, Display.invert)
+    Display.CopyPattern(Display.CursorColor, Display.star, X - 7, Y - 7, Display.invert)
   END FlipStar;
 
   PROCEDURE OpenCursor(VAR c: Cursor);
@@ -228,11 +228,11 @@ MODULE Oberon; (*JG 6.9.90 / 23.9.93 / 13.8.94 / NW 14.4.2013 / 22.12.2015 / AP 
     Viewers.ViewerMsg:
       IF (M.id = Viewers.restore) & (V.W > 0) & (V.H > 0) THEN
         RemoveMarks(V.X, V.Y, V.W, V.H);
-        Display.ReplConst(Display.black, V.X, V.Y, V.W, V.H, Display.replace)
+        Display.ReplConst(Display.BackgroundColor, V.X, V.Y, V.W, V.H, Display.replace)
       ELSIF M.id = Viewers.modify THEN
         IF M.Y < V.Y THEN
           RemoveMarks(V.X, M.Y, V.W, V.Y - M.Y);
-          Display.ReplConst(Display.black, V.X, M.Y, V.W, V.Y - M.Y, Display.replace)
+          Display.ReplConst(Display.BackgroundColor, V.X, M.Y, V.W, V.Y - M.Y, Display.replace)
         ELSIF M.Y > V.Y THEN RemoveMarks(V.X, V.Y, V.W, M.Y - V.Y)
         END
       END
@@ -460,7 +460,7 @@ BEGIN User[0] := 0X;
   OpenCursor(Mouse); OpenCursor(Pointer);
 
   DW := Display.Width; DH := Display.Height; CL := DW;
-  CurFnt := Fonts.Default; CurCol := Display.white; CurOff := 0;
+  CurFnt := Fonts.Default; CurCol := Display.TextColor; CurOff := 0;
 
   ActCnt := 0; CurTask := NewTask(GC, 1000); Install(CurTask);
   Texts.OpenWriter(W); Log := NIL;
