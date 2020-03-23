@@ -50,7 +50,8 @@ MODULE Input; (*NW 5.10.86 / 15.11.90 Ceres-2; PDR 21.4.12 / NW 15.5.2013 Ceres-
     VAR w: INTEGER;
   BEGIN SYSTEM.GET(msAdr, w);
     keys := SYSTEM.VAL(SET, w DIV 1000000H MOD 8);
-    x := w MOD 400H; y := (w DIV 1000H) MOD 400H;
+    x := w MOD 1000H; y := (w DIV 1000H) MOD 1000H;
+    IF x >= MW THEN x := MW-1 END;
     IF y >= MH THEN y := MH-1 END
   END Mouse;
 
