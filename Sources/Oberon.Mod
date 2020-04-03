@@ -469,8 +469,9 @@ MODULE Oberon; (*JG 6.9.90 / 23.9.93 / 13.8.94 / NW 14.4.2013 / 22.12.2015 / AP 
 
   PROCEDURE Loop*;
     VAR V: Viewers.Viewer; M: InputMsg; N: ControlMsg;
-      prevX, prevY, X, Y, t: INTEGER; keys: SET; ch: CHAR;
+      prevX, prevY, X, Y, t, minTime: INTEGER; keys: SET; ch: CHAR;
   BEGIN
+    minTime := 0;
     REPEAT
       Input.Mouse(keys, X, Y);
       IF Input.Available() > 0 THEN Input.Read(ch);
@@ -492,9 +493,15 @@ MODULE Oberon; (*JG 6.9.90 / 23.9.93 / 13.8.94 / NW 14.4.2013 / 22.12.2015 / AP 
           IF Y >= DH THEN Y := DH END ;
           M.Y := Y; M.keys := keys; V := Viewers.This(X, Y); V.handle(V, M); prevX := X; prevY := Y
         END ;
+	Input.WaitForInput(minTime);
         CurTask := CurTask.next; t := Kernel.Time();
         IF t >= CurTask.nextTime THEN
-          CurTask.nextTime := t + CurTask.period; CurTask.state := active; CurTask.handle; CurTask.state := idle
+          CurTask.nextTime := t + CurTask.period; CurTask.state := active; CurTask.handle; CurTask.state := idle;
+	  minTime := CurTask.nextTime;
+          FOR t := 1 TO NofTasks DO
+            CurTask := CurTask.next;
+            IF CurTask.nextTime < minTime THEN minTime := CurTask.nextTime END
+          END
         END
       END
     UNTIL FALSE

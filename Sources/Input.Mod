@@ -58,6 +58,10 @@ MODULE Input; (*NW 5.10.86 / 15.11.90 Ceres-2; PDR 21.4.12 / NW 15.5.2013 Ceres-
   BEGIN MW := w; MH := h
   END SetMouseLimits;
 
+  PROCEDURE WaitForInput*(untilTimestamp: INTEGER);
+  BEGIN (* not supported *)
+  END WaitForInput;
+
   PROCEDURE Init*;
   BEGIN Up := FALSE; Shift := FALSE; Ctrl := FALSE; Recd := FALSE;
     KTabAdr := SYSTEM.ADR($
