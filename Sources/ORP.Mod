@@ -1114,7 +1114,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
       IF ORS.errcnt = 0 THEN
         ORG.Close(modid, key, exno);
         Texts.WriteInt(W, ORG.pc, 6); Texts.WriteInt(W, dc, 6); Texts.WriteHex(W, key)
-      ELSE Texts.WriteLn(W); Texts.WriteString(W, "compilation FAILED")
+      ELSE Texts.WriteLn(W); Texts.WriteString(W, "compilation FAILED");Oberon.Return(1)
       END ;
       Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf);
       ORB.CloseScope; pbsList := NIL
@@ -1154,7 +1154,7 @@ MODULE ORP; (*N. Wirth 1.7.97 / 8.3.2020  Oberon compiler for RISC in Oberon-07 
         NEW(T); Texts.Open(T, S.s);
         IF T.len > 0 THEN Option(S); ORS.Init(T, 0); Module; res := ORS.errcnt
         ELSE Texts.WriteString(W, S.s); Texts.WriteString(W, " not found");
-          Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf)
+          Texts.WriteLn(W); Texts.Append(Oberon.Log, W.buf); Oberon.Return(1)
         END ;
         IF (T.len # 0) & (ORS.errcnt = 0) THEN Texts.Scan(S) ELSE S.class := 0 END
       END
