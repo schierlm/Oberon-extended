@@ -207,6 +207,10 @@ MODULE Display;  (*NW 5.11.2013 / 17.1.2019*)
   BEGIN
     Base := 0E7F00H;
     SYSTEM.GET(Base, magic);
+    IF (magic < 53697A65H) OR (magic > 53697A67H) THEN
+      Base := 3FE7F00H;
+      SYSTEM.GET(Base, magic)
+    END;
     IF magic = 53697A65H THEN
       SYSTEM.GET(Base + 4, Width);
       SYSTEM.GET(Base + 8, Height);
