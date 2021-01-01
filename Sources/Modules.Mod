@@ -444,7 +444,7 @@ MODULE Modules;  (*Link and load on RISC; NW 20.10.2013 / 8.1.2019 / AP 12.12.20
   PROCEDURE Unload(mod: Module); (*from memory*)
     VAR imp: Module; p, q: INTEGER;
   BEGIN (*mod.refcnt = 0 & mod.name[0] # 0X*)
-    IF mod.close # NIL THEN mod.close END ; (*module finalization sequence*)
+    IF mod.close # NIL THEN mod.close END ; (*finalize module*)
     mod.name[0] := 0X; p := mod.imp; q := mod.cmd;
     WHILE p < q DO (*imports*) SYSTEM.GET(p, imp); DEC(imp.refcnt); INC(p, 4) END ;
     IF mod.hidden THEN mod.hidden := FALSE; DEC(NofHidden) END ;
