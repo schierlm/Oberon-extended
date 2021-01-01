@@ -16,7 +16,7 @@ MODULE Stars;   (*NW 15.1.2013, 15.11.2013 / AP 12.2.20 Extended Oberon*)
     W: Texts.Writer;
 
   PROCEDURE Draw(x, y: INTEGER);
-  BEGIN Display.CopyPattern(Display.white, Display.star, x, y, Display.invert)
+  BEGIN Display.CopyPattern(Display.CursorColor, Display.star, x, y, Display.invert)
   END Draw;
 
   PROCEDURE Restore(F: Frame);
